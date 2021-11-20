@@ -1,47 +1,36 @@
 #include "icl.h"
 
-class ICL
+ICL::ICL(uint8_t* music)
 {
-    private:
-        static uint8 *music;
-        static uint32 position;
-        
+    this->music = music;
+    this->pos = 0;
+}
 
-    public:
-        // static ICL *getInstance()
-        // {
-        //     if (!instance)
-        //     {
-        //         instance = new ICL();                //singleton 
-        //     }
-
-        //     return instance;
-        // }
-    ICL(uint8 *music)
+uint8_t ICL::validateHeader()
+{
+    if(nextByte() != 'I' || nextByte() != 'C' || nextByte() != 'L') // ASCII "ICL"
     {
-        this->music = music;
-        this->pos = 0;
+        return 1;
     }
 
-    int validateHeader()
+    if(nextWord() != 1) // Version
     {
-        if(music[pos++] != 'I' || music[pos++] != 'C' || music[pos++] != 'L') //Von ICL
-        {
-            return 1;
-        }
-
-        if(music[pos++] != 1) //Version
-        {
-            return 2;
-        }
+        return 2;
     }
+}
 
 
-    Action getNextAction()
-    {
-        struct Action action;
+Event ICL::getNextEvent()
+{
+    struct Event event;
+}
 
+uint8_t ICL::nextByte()
+{
+    return music[pos++];
+}
 
-    }
-
-};
+uint16_t ICL::nextWord()
+{
+    return (music[pos++] << 8) || music[pos++];
+}

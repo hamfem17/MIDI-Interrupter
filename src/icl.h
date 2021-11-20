@@ -1,21 +1,31 @@
 #pragma once
+
 #include <avr/io.h>
 
-enum ActionType
+enum EventType
 {
-    WAIT, NOTE_ON, NOTE_OFF
+    NOTE_ON, 
+    NOTE_OFF, 
+    END
 };
 
-struct Action
+struct Event
 {
-    ActionType actiontype;
-
-    uint32_t delay;
+    uint32_t deltaTime;
+    EventType actiontype;
+    uint8_t note;
 };
 
 class ICL
 {
+    uint8_t* music;
+    uint32_t pos;
+
+    uint8_t nextByte();
+    uint16_t nextWord();
+
     public:
-        ICL(uint8_t *music);
-        int validateHeader();
+    ICL(uint8_t* music);
+    uint8_t validateHeader();
+    Event getNextEvent();
 };
