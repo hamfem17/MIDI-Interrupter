@@ -1,6 +1,7 @@
 #pragma once
 
 #include <avr/io.h>
+#include <stdlib.h>
 
 enum EventType
 {
@@ -19,7 +20,7 @@ struct Event
 class ICL
 {
     uint8_t* music;
-    uint32_t pos;
+    uint32_t pos; 
 
     uint8_t nextByte();
     uint16_t nextWord();
