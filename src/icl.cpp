@@ -1,5 +1,5 @@
 #include "icl.h"
-#include <Arduino.h>
+#include "uart.h"
 
 ICL::ICL(uint8_t* music)
 {
@@ -24,25 +24,24 @@ uint8_t ICL::validateHeader()
         return 3;
     }
 
-    uint32_t byteNameLength = 0;
-    int n = pos;
+    int nameEnd = pos;
 
-    while(music[n] != 0x00)
+    while(music[nameEnd] != 0x00)
     {
-        n++;
+        nameEnd++;
     }
 
-    byteNameLength = n - pos;
-    char* musicName = (char*) malloc( sizeof(char) * byteNameLength+1);
+    uint32_t nameLength = nameEnd - pos + 1;
+    char* songName = (char*) malloc(sizeof(char) * nameLength);
 
-    for(uint32_t i = 0; i < pos + byteNameLength + 1; i++)
+    for(uint32_t i = 0; i < nameLength; i++)
     {
-        musicName[i] = music[pos];
+        songName[i] = nextByte();
     }
 
-    char i [] = "Hallo";
-
-    Serial.println(i);
+    // Debug
+    uart::writeString("Song name: ");
+    uart::writeString(songName);
 
     return 0;
 }

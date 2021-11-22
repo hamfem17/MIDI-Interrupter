@@ -1,10 +1,10 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include <Arduino.h>
 
 #include "notes.h"
 #include "icl.h"
+#include "uart.h"
 
 // Register Addresses
 #define OCR1A_addr 0x88
@@ -117,6 +117,7 @@ void setUpTimer() {
 	TCCR5B |= (1 << CS52) | (1 << WGM53);
 }
 
+
 int main() {
 	// setUpTimer();
 
@@ -129,13 +130,9 @@ int main() {
 	// _delay_ms(1000);
 	// TM::stop(NOTE_E6);
 
+	uart::init();
+
 	#define MusicSize 412
-	Serial.begin(2400);
-
-	char i [] = "Hallo";
-
-    Serial.println("LOLOLOLO");
-
 	uint8_t music[MusicSize] = {
 		0x49, 0x43, 0x4c, 0x00, 0x01, 0x01, 0x75, 0x6e, 0x62, 0x65, 0x6e, 0x61, 0x6e, 0x6e, 0x74, 0x31,
 		0x00, 0x00, 0x20, 0x0a, 0x2c, 0x2a, 0x84, 0x58, 0x00, 0x47, 0x78, 0x10, 0x47, 0x00, 0x00, 0x4c,
@@ -165,9 +162,9 @@ int main() {
 		0x4f, 0x78, 0x10, 0x4f, 0x00, 0x00, 0x4c, 0x84, 0x58, 0x10, 0x4c
 	};
 
-	//ICL decoder = ICL(music);
+	ICL decoder = ICL(music);
 
-	/*if(decoder.validateHeader())
+	if(decoder.validateHeader())
 	{
 		return 1;
 	};
@@ -181,9 +178,7 @@ int main() {
 			break;
 		}
 		
-	}*/
-
-	delay(1);
+	}
 
 	return 0;
 }
