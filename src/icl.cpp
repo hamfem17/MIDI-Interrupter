@@ -1,5 +1,6 @@
 #include "icl.h"
 #include "uart.h"
+#include <numeric.h>
 
 ICL::ICL(uint8_t* music)
 {
@@ -50,6 +51,23 @@ uint8_t ICL::validateHeader()
 Event ICL::getNextEvent()
 {
     struct Event event;
+    event.deltaTime = 0;
+    for(int i = 0; i < 4; i++)
+    {
+        uint8_t byte = nextByte();
+        event.deltaTime = (event.deltaTime << 7) | (byte & 0x7F);
+        if(byte & 0x80)
+        {
+             break;
+        }
+    }
+    char st[100] = "";
+
+    iota(event.deltaTime,st,10);
+
+    uart::writeString(st);
+
+
     return event;
 }
 
