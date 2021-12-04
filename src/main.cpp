@@ -180,6 +180,7 @@ int main() {
 		
 	}
 */
+	uart::writeString("  DT | EVENT TYPE  | VEL  | NOTE\n");
 	while(1)
 	{
 		Event event = decoder.getNextEvent();

@@ -7,5 +7,5 @@ namespace uart {
     void init();
     void writeString (char str[]);
     void printEvent (Event event);
-    void writeInt(uint32_t nummber);
+    void writeInt(uint32_t nummber, uint8_t padding = 4);
 }

@@ -24,56 +24,62 @@ void uart::writeString (char str[])
 }
 
 void uart::printEvent (Event event)
-{
-    uart::writeString("\nEvent: \n");
-    
-    uart::writeString("DeltaTime: ");
+{    
     uart::writeInt(event.deltaTime);
+    uart::writeString(" | ");
 
     switch(event.type)
     {
         case NOTE_ON:
-            uart::writeString("  (NOTE_ON)   ");
-            uart::writeString("Velocity: ");
-            uart::writeInt(event.velocity);
+            uart::writeString("NOTE ON    ");
             break;
 
         case NOTE_OFF:
-            uart::writeString("  (NOTE_OFF)   ");
+            uart::writeString("NOTE OFF   ");
             break;
 
         case SET_TEMPO:
-            uart::writeString("  (SET_TEMPO)   ");
-            uart::writeString("Tempo: ");
-            uart::writeInt(event.tempo);
+            uart::writeString("SET TEMPO  ");
             break;
 
         case END_OF_FILE:
-            uart::writeString("  (END_OF_FILE)   ");
+            uart::writeString("END_OF_FILE");
     }
+
+    uart::writeString(" | ");
 
     if(event.type == NOTE_ON || event.type == NOTE_OFF)
     {
-        uart::writeString("    Note: ");
+        uart::writeInt(event.velocity);
+        uart::writeString(" | ");
+
         uart::writeInt(event.note);
     }
+
+    uart::writeString("\n");
 }
 
 
-void uart::writeInt (uint32_t number)
+void uart::writeInt (uint32_t number, uint8_t padding = 4)
 {
     char s[100];
 
-    if(number > 0xFFFF)
+    ltoa(number,s,10);    //itoa is integer with 16 Bit but need 32 bit
+    uint8_t len;
+    for(int i = 0; i < 100; i++)
     {
-        ltoa(number,s,10);    //itoa is integer with 16 Bit but need 32 bit
-        uart::writeString(s);
+        if(s[i] == 0)
+        {
+            len = i;
+            break;
+        }
     }
-    else
-    {
-        itoa(number,s,10);
-        uart::writeString(s);
+
+    for(int i = 0; i < padding - len; i++) {
+        uart::writeString(" ");
     }
+
+    uart::writeString(s);
 }
 
    

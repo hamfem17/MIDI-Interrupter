@@ -42,6 +42,7 @@ uint8_t ICL::validateHeader()
     // Debug
     uart::writeString("\nSong name: ");
     uart::writeString(songName);
+    uart::writeString("\n");
 
     return 0;
 }
