@@ -6,15 +6,18 @@
 enum EventType
 {
     NOTE_ON, 
-    NOTE_OFF, 
-    END
+    NOTE_OFF,
+    SET_TEMPO,
+    END_OF_FILE
 };
 
 struct Event
 {
     uint32_t deltaTime;
-    EventType actiontype;
+    EventType type;
     uint8_t note;
+    uint8_t velocity;
+    uint32_t tempo;
 };
 
 class ICL

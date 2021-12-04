@@ -1,6 +1,5 @@
 #include "icl.h"
 #include "uart.h"
-#include <numeric.h>
 
 ICL::ICL(uint8_t* music)
 {
@@ -41,7 +40,7 @@ uint8_t ICL::validateHeader()
     }
 
     // Debug
-    uart::writeString("Song name: ");
+    uart::writeString("\nSong name: ");
     uart::writeString(songName);
 
     return 0;
@@ -56,16 +55,53 @@ Event ICL::getNextEvent()
     {
         uint8_t byte = nextByte();
         event.deltaTime = (event.deltaTime << 7) | (byte & 0x7F);
-        if(byte & 0x80)
+        if(~byte & 0x80)
         {
              break;
         }
     }
-    char st[100] = "";
 
-    iota(event.deltaTime,st,10);
 
-    uart::writeString(st);
+    uint8_t byte = nextByte();
+
+    switch(byte & 0xF0)
+    {
+        case 0x00:
+
+            event.type = NOTE_ON;
+            break;
+
+        case 0x10:
+            
+            event.type = NOTE_OFF;
+            break;
+
+        case 0x20:
+
+            event.type = SET_TEMPO;
+            break;
+
+        case 0xF0:
+
+            event.type = END_OF_FILE;
+            break;
+    }
+
+    if(event.type == NOTE_ON)
+    {
+        event.velocity = byte & 0x0F;
+    }
+
+    if(event.type == NOTE_ON || event.type == NOTE_OFF)
+    {
+        event.note =  nextByte();
+    }
+
+    if(event.type == SET_TEMPO)
+    {
+        event.tempo = (int32_t)nextWord() << 8 | nextByte();
+
+    }
 
 
     return event;
@@ -78,5 +114,5 @@ uint8_t ICL::nextByte()
 
 uint16_t ICL::nextWord()
 {
-    return (music[pos++] << 8) || music[pos++];
+    return ((int16_t)music[pos++] << 8) | music[pos++];
 }
