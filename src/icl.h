@@ -23,7 +23,7 @@ struct Event
 class ICL
 {
     uint8_t* music;
-    uint32_t pos; 
+    uint32_t pos = 0; 
 
     uint8_t nextByte();
     uint16_t nextWord();
