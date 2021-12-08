@@ -28,7 +28,7 @@ namespace DeltaTimer
 		TCNT2 = 0;
 		
 		uint64_t delayTime = deltatime *2* 2777; // Delta Time zur Microsekunden rechnen
-		overflow_total = delayTime / 8224;
+		overflow_total = delayTime / 4096;
 
 		overflow_count = 0;
 
