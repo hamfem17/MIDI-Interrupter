@@ -56,6 +56,12 @@ void uart::printEvent (Event event)
         uart::writeInt(event.note);
     }
 
+    if(event.type == SET_TEMPO)
+    {
+        uart::writeInt(event.tempo);
+        uart::writeString(" | ");
+    }
+
     uart::writeString("\n");
 }
 

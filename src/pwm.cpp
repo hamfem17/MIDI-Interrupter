@@ -49,7 +49,7 @@ void PWM::stop(int freq)
     }
 }
 
-void PWM::setUp() {
+void PWM::init() {
 
 	// Set all PWM pins as output
 	DDRB |= (1 << OC1B);

@@ -56,5 +56,5 @@ namespace PWM
 
 	void stop(int freq);
 
-    void setUp();
+    void init();
 }

@@ -9,21 +9,55 @@
 #include "pwm.h"
 
 
-namespace Timer
+namespace DeltaTimer
 {
-	uint8_t timer_overflow;
+	uint32_t volatile overflow_count;
+	uint32_t overflow_total;
+	uint32_t tempo = 2000;						//μs per MIDI-Tick
 
+	void init()
+	{
+		TCCR2A = 0;
+		TCCR2B |= (1 << CS22) | (1 << CS21);
+
+		TIMSK2 |= (1 << TOIE2);
+	}
+
+	void delay(uint32_t deltatime)
+	{
+		TCNT2 = 0;
+		
+		uint64_t delayTime = deltatime *2* 2777; // Delta Time zur Microsekunden rechnen
+		overflow_total = delayTime / 8224;
+
+		overflow_count = 0;
+
+		uart::writeInt(overflow_total);
+		uart::writeString("\n");
+		
+		while(overflow_count != overflow_total)
+		{
+			
+		}
+	}
 }
 
-int main() {
+ISR (TIMER2_OVF_vect)
+{
+	DeltaTimer::overflow_count++;
+}
 
+int main()
+{
 	uart::init();
-	PWM::setUp();
+	DeltaTimer::init();
+	PWM::init();
+	sei();
 
 	#define MusicSize 414
 	uint8_t music[MusicSize] = {
 		0x49, 0x43, 0x4c, 0x00, 0x01, 0x01, 0x75, 0x6e, 0x62, 0x65, 0x6e, 0x61, 0x6e, 0x6e, 0x74, 0x32,
-		0x00, 0x00, 0x20, 0x0a, 0x2c, 0x2a, 0x84, 0x58, 0x00, 0x47, 0x78, 0x10, 0x47, 0x00, 0x00, 0x4c,
+		0x00, 0x00, 0x20, 0x00, 0x0a, 0xd9, 0x84, 0x58, 0x00, 0x47, 0x78, 0x10, 0x47, 0x00, 0x00, 0x4c,
 		0x81, 0x34, 0x10, 0x4c, 0x00, 0x00, 0x4f, 0x3c, 0x10, 0x4f, 0x00, 0x00, 0x4e, 0x78, 0x10, 0x4e,
 		0x00, 0x00, 0x4c, 0x81, 0x70, 0x10, 0x4c, 0x00, 0x00, 0x53, 0x78, 0x10, 0x53, 0x00, 0x00, 0x51,
 		0x82, 0x68, 0x10, 0x51, 0x00, 0x00, 0x4e, 0x82, 0x68, 0x10, 0x4e, 0x00, 0x00, 0x4c, 0x81, 0x34,
@@ -61,10 +95,20 @@ int main() {
 
 	int freq;
 
+	PWM::start(440);
+	for(int n = 0; n < 100; n++)
+	{
+		DeltaTimer::delay(120);
+	}
+	PWM::stop(440);
+
+/*
 	while(1)
 	{
 		Event event = decoder.getNextEvent();
-		uart::printEvent(event);
+
+		uart::writeInt(event.deltaTime);
+		uart::writeString("       ");
 
 		if(event.type == END_OF_FILE)
 		{
@@ -75,18 +119,17 @@ int main() {
 		{
 			case NOTE_ON:
 				freq = 440 * pow(2, (double)(event.note - 69) / 12);
+				DeltaTimer::delay(event.deltaTime);
 				PWM::start(freq);
-				uart::writeString(" Frequenz: ");
-				uart::writeInt(freq);
-				_delay_ms(500);
 				break;
 			case NOTE_OFF:
 			 	freq = 440 * pow(2, (double)(event.note - 69) / 12);
+				DeltaTimer::delay(event.deltaTime);
 				PWM::stop(freq);
 				break;
 		}
 	}
 
-
+	*/
 	return 0;
 }
