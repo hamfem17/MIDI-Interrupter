@@ -3,6 +3,10 @@
 #include <util/delay.h>
 #include <math.h>
 
+#include "FATfs/diskio.h"
+#include "FATfs/ff.h"
+#include "FATfs/ffconf.h"
+
 #include "notes.h"
 #include "icl.h"
 #include "uart.h"
@@ -27,7 +31,7 @@ namespace DeltaTimer
 	{
 		TCNT2 = 0;
 		
-		uint64_t delayTime = deltatime *2* 2777; // Delta Time zur Microsekunden rechnen
+		uint64_t delayTime = deltatime * tempo; // Delta Time zur Microsekunden rechnen
 		overflow_total = delayTime / 4096;
 
 		overflow_count = 0;
@@ -39,6 +43,11 @@ namespace DeltaTimer
 		{
 			
 		}
+	}
+
+	void setTempo(uint32_t music_tempo)
+	{
+		tempo = music_tempo;
 	}
 }
 
@@ -95,14 +104,17 @@ int main()
 
 	int freq;
 
+/*
 	PWM::start(440);
 	for(int n = 0; n < 100; n++)
 	{
 		DeltaTimer::delay(120);
 	}
 	PWM::stop(440);
+	*/
 
-/*
+
+
 	while(1)
 	{
 		Event event = decoder.getNextEvent();
@@ -127,9 +139,10 @@ int main()
 				DeltaTimer::delay(event.deltaTime);
 				PWM::stop(freq);
 				break;
+			case SET_TEMPO:
+				DeltaTimer::setTempo(event.tempo);
 		}
 	}
 
-	*/
 	return 0;
 }
