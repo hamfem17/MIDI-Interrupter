@@ -10,7 +10,7 @@ namespace DeltaTimer
 	    uint32_t tempo = 2000;						//μs per MIDI-Tick
     }
 
-	uint32_t volatile overflow_count;
+	extern uint32_t volatile overflow_count;
 
 	void init();
 

@@ -3,6 +3,11 @@
 #include "uart.h"
 #include "deltaTimer.h"
 
+namespace DeltaTimer
+{
+    uint32_t volatile overflow_count;
+}
+
 void DeltaTimer::init()
 {
     TCCR2A = 0;
@@ -17,7 +22,7 @@ void DeltaTimer::delay(uint32_t deltatime)
     TCNT2 = 0;
     
     uint64_t delayTime = deltatime * tempo; // Delta Time zur Microsekunden rechnen
-    overflow_total = delayTime / 4096;
+    DeltaTimer::overflow_total = delayTime / 4096;
 
     overflow_count = 0;
 

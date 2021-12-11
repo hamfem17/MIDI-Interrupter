@@ -12,6 +12,22 @@
 #include "pwm.h"
 #include "deltaTimer.h"
 
+
+class FATfs
+{
+	FIL* fp;          		/* [OUT] Pointer to the file object structure */
+  	const TCHAR* path; 		/* [IN] File name */
+  	BYTE mode;          	/* [IN] Mode flags */
+
+	void file_List()
+	{
+		
+	}
+
+
+};
+
+
 int main()
 {
 	uart::init();
@@ -19,6 +35,8 @@ int main()
 	PWM::init();
 
 	#define MusicSize 414
+	int freq;
+
 	uint8_t music[MusicSize] = {
 		0x49, 0x43, 0x4c, 0x00, 0x01, 0x01, 0x75, 0x6e, 0x62, 0x65, 0x6e, 0x61, 0x6e, 0x6e, 0x74, 0x32,
 		0x00, 0x00, 0x20, 0x00, 0x0a, 0xd9, 0x84, 0x58, 0x00, 0x47, 0x78, 0x10, 0x47, 0x00, 0x00, 0x4c,
@@ -57,19 +75,6 @@ int main()
 
 	uart::writeString("  DT | EVENT TYPE  | VEL  | NOTE\n");
 
-	int freq;
-
-/*
-	PWM::start(440);
-	for(int n = 0; n < 100; n++)
-	{
-		DeltaTimer::delay(120);
-	}
-	PWM::stop(440);
-	*/
-
-
-
 	while(1)
 	{
 		Event event = decoder.getNextEvent();
@@ -96,6 +101,10 @@ int main()
 				break;
 			case SET_TEMPO:
 				DeltaTimer::setTempo(event.tempo);
+				break;
+			case END_OF_FILE:
+				break;
+
 		}
 	}
 
