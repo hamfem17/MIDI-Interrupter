@@ -1,5 +1,4 @@
 #include <avr/io.h>
-#include <avr/interrupt.h>
 #include <util/delay.h>
 #include <math.h>
 
@@ -11,57 +10,13 @@
 #include "icl.h"
 #include "uart.h"
 #include "pwm.h"
-
-
-namespace DeltaTimer
-{
-	uint32_t volatile overflow_count;
-	uint32_t overflow_total;
-	uint32_t tempo = 2000;						//μs per MIDI-Tick
-
-	void init()
-	{
-		TCCR2A = 0;
-		TCCR2B |= (1 << CS22) | (1 << CS21);
-
-		TIMSK2 |= (1 << TOIE2);
-	}
-
-	void delay(uint32_t deltatime)
-	{
-		TCNT2 = 0;
-		
-		uint64_t delayTime = deltatime * tempo; // Delta Time zur Microsekunden rechnen
-		overflow_total = delayTime / 4096;
-
-		overflow_count = 0;
-
-		uart::writeInt(overflow_total);
-		uart::writeString("\n");
-		
-		while(overflow_count != overflow_total)
-		{
-			
-		}
-	}
-
-	void setTempo(uint32_t music_tempo)
-	{
-		tempo = music_tempo;
-	}
-}
-
-ISR (TIMER2_OVF_vect)
-{
-	DeltaTimer::overflow_count++;
-}
+#include "deltaTimer.h"
 
 int main()
 {
 	uart::init();
 	DeltaTimer::init();
 	PWM::init();
-	sei();
 
 	#define MusicSize 414
 	uint8_t music[MusicSize] = {
