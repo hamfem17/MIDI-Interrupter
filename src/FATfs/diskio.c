@@ -14,7 +14,8 @@
 #define DEV_RAM		0	/* Example: Map Ramdisk to physical drive 0 */
 #define DEV_MMC		1	/* Example: Map MMC/SD card to physical drive 1 */
 #define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
-
+//https://github.com/zephyrproject-rtos/fatfs/blob/master/zfs_diskio.c
+//https://stackoverflow.com/questions/43936281/using-fatfs-causes-infinite-loop-in-f-write-on-pic18f46j50-uc/54420757
 
 /*-----------------------------------------------------------------------*/
 /* Get Drive Status                                                      */
