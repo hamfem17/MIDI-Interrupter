@@ -2,31 +2,11 @@
 #include <util/delay.h>
 #include <math.h>
 
-#include "FATfs/diskio.h"
-#include "FATfs/ff.h"
-#include "FATfs/ffconf.h"
-
 #include "notes.h"
 #include "icl.h"
 #include "uart.h"
 #include "pwm.h"
 #include "deltaTimer.h"
-
-
-class FATfs
-{
-	FIL* fp;          		/* [OUT] Pointer to the file object structure */
-  	const TCHAR* path; 		/* [IN] File name */
-  	BYTE mode;          	/* [IN] Mode flags */
-
-	void file_List()
-	{
-		
-	}
-
-
-};
-
 
 int main()
 {
