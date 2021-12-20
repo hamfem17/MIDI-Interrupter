@@ -7,6 +7,8 @@
 #include "uart.h"
 #include "pwm.h"
 #include "deltaTimer.h"
+#include "FATfs/ff.h"
+#include "FATfs/diskio.h"
 
 int main()
 {
@@ -16,6 +18,18 @@ int main()
 
 	#define MusicSize 414
 	int freq;
+
+
+
+	FATFS fs;
+	FIL fil;
+	FRESULT fresult;
+	char buffer[256];
+	FATFS *pfs;
+	DWORD fre_clust;
+	unsigned long total, free_space;
+
+
 
 	uint8_t music[MusicSize] = {
 		0x49, 0x43, 0x4c, 0x00, 0x01, 0x01, 0x75, 0x6e, 0x62, 0x65, 0x6e, 0x61, 0x6e, 0x6e, 0x74, 0x32,
@@ -46,6 +60,7 @@ int main()
 		0x4f, 0x78, 0x10, 0x4f, 0x00, 0x00, 0x4c, 0x84, 0x58, 0x10, 0x4c, 0x00, 0xF0,
 	};
 
+	/*
 	ICL decoder = ICL(music);
 
 	if(decoder.validateHeader())
@@ -87,6 +102,9 @@ int main()
 
 		}
 	}
+	*/
+
+	
 
 	return 0;
 }
