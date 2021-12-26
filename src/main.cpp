@@ -1,14 +1,22 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <math.h>
+#include <Arduino.h>
+#include <SD.h>
+#include <SPI.h>
 
 #include "notes.h"
 #include "icl.h"
 #include "uart.h"
 #include "pwm.h"
 #include "deltaTimer.h"
-#include "FATfs/ff.h"
-#include "FATfs/diskio.h"
+
+Sd2Card card;
+SdVolume volume;
+SdFile root;
+File myFile;
+
+const int chipSelect = 53;
 
 int main()
 {
@@ -18,17 +26,6 @@ int main()
 
 	#define MusicSize 414
 	int freq;
-
-
-
-	FATFS fs;
-	FIL fil;
-	FRESULT fresult;
-	char buffer[256];
-	FATFS *pfs;
-	DWORD fre_clust;
-	unsigned long total, free_space;
-
 
 
 	uint8_t music[MusicSize] = {
@@ -103,8 +100,36 @@ int main()
 		}
 	}
 	*/
-
 	
+	uart::debugString("\n\nInitializing SD card...\n");
+
+ 	// we'll use the initialization code from the utility libraries
+  	// since we're just testing if the card is working!
+  	if (!card.init(SPI_HALF_SPEED, chipSelect)) {
+		uart::debugString("initialization failed. Things to check:\n");
+		uart::debugString("* is a card inserted?\n");
+		uart::debugString("* is your wiring correct?\n");
+		uart::debugString("* did you change the chipSelect pin to match your shield or module?\n");
+		while (1);
+	} else {
+		uart::debugString("Wiring is correct and a card is present.\n");
+	}
+
+	myFile = SD.open("ACDC.mid");
+
+	if (myFile) {
+		uart::debugString("ACDC.mid:\n");
+
+		while (myFile.available())
+		{
+			uart::debugInt(myFile.read());
+		}
+		
+		myFile.close();
+	} else {
+
+		uart::debugString("error opening test.txt\n");
+	}
 
 	return 0;
 }
