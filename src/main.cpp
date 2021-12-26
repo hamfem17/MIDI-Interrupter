@@ -101,27 +101,29 @@ int main()
 	}
 	*/
 	
-	uart::debugString("\n\nInitializing SD card...\n");
+	uart::debugString("Initializing SD card...\n");
 
- 	// we'll use the initialization code from the utility libraries
-  	// since we're just testing if the card is working!
-  	if (!card.init(SPI_HALF_SPEED, chipSelect)) {
-		uart::debugString("initialization failed. Things to check:\n");
-		uart::debugString("* is a card inserted?\n");
-		uart::debugString("* is your wiring correct?\n");
-		uart::debugString("* did you change the chipSelect pin to match your shield or module?\n");
+	if (!SD.begin(chipSelect)) {
+		uart::debugString("initialization failed!\n");
 		while (1);
-	} else {
-		uart::debugString("Wiring is correct and a card is present.\n");
 	}
+	uart::debugString("initialization done.\n");
 
-	myFile = SD.open("ACDC.mid");
 
-	if (myFile) {
-		uart::debugString("ACDC.mid:\n");
 
-		while (myFile.available())
+
+
+
+  	myFile = SD.open("ACDC_TNT.mid");
+
+	if (myFile)
+	{
+		uart::debugString("ACDC_TNT.mid:\n");
+		int u = 0;
+
+		while (u < 30)
 		{
+			u++;
 			uart::debugInt(myFile.read());
 		}
 		
