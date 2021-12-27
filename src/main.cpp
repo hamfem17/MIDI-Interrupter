@@ -109,11 +109,6 @@ int main()
 	}
 	uart::debugString("initialization done.\n");
 
-
-
-
-
-
   	myFile = SD.open("ACDC_TNT.mid");
 
 	if (myFile)
@@ -121,10 +116,10 @@ int main()
 		uart::debugString("ACDC_TNT.mid:\n");
 		int u = 0;
 
-		while (u < 30)
-		{
-			u++;
-			uart::debugInt(myFile.read());
+		uart::debugInt(myFile.size());
+
+		while (myFile.available()) {
+			uart::debugHex(myFile.read());
 		}
 		
 		myFile.close();
