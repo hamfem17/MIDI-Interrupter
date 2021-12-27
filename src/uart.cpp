@@ -168,3 +168,35 @@ void uart::debugInt (uint32_t number, uint8_t padding = 4)
     uart::writeString(s);
     #endif
 }
+
+void uart::debugHex (uint32_t number, uint8_t padding = 4)
+{
+    #ifdef DEBUG
+    char s[100];
+
+    ltoa(number,s,16);    //itoa is integer with 16 Bit but need 32 bit
+    uint8_t len;
+    for(int i = 0; i < 100; i++)
+    {
+        if(s[i] == 0)
+        {
+            len = i;
+            break;
+        }
+    }
+
+    for(int i = 0; i < padding - len; i++) {
+        uart::writeString(" ");
+    }
+
+    uart::writeString("0x");
+
+
+    if(number < 0x10)
+    {
+        uart::writeString("0");
+    }
+
+    uart::writeString(s);
+    #endif
+}

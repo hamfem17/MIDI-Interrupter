@@ -14,4 +14,5 @@ namespace uart
     void debugEvent (Event event);
     void writeInt(uint32_t nummber, uint8_t padding = 4);
     void debugInt (uint32_t number, uint8_t padding = 4);
+    void debugHex (uint32_t number, uint8_t padding = 4);
 }
