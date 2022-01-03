@@ -107,9 +107,6 @@ void uart::debugEvent (Event event)
 
     if(event.type == NOTE_ON || event.type == NOTE_OFF)
     {
-        uart::writeInt(event.velocity);
-        uart::writeString(" | ");
-
         uart::writeInt(event.note);
     }
 

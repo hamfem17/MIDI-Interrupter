@@ -30,8 +30,17 @@ uint8_t MIDI::readHeader()
         return 4;
     }
 
+
     divison = nextWord(); // Divisons
 
+    
+
+    if(nextByte() != 'M' || nextByte() != 'T' || nextByte() != 'r' || nextByte() != 'k') // ASCII "MThd"
+    {
+        return 1;
+    }
+    nextDWord();
+    
     return 0;
 }
 
@@ -52,11 +61,11 @@ Event MIDI::getNextEvent()
 
     uint8_t byte = nextByte();
 
-    if(byte & 0xF0 == 0x80)
+    if((byte & 0xF0) == 0x80)
     {
         event.type = NOTE_OFF;
     } 
-    else if(byte & 0xF0 == 0x90)
+    else if((byte & 0xF0) == 0x90)
     {
         event.type = NOTE_ON;
     }
@@ -97,8 +106,8 @@ uint16_t MIDI::nextWord()
     return ((int16_t)music[pos++] << 8) | music[pos++];
 }
 
-uint16_t MIDI::nextDWord()
+uint32_t MIDI::nextDWord()
 {
-    return ((int32_t)music[pos++] << 24) | music[pos++];
+    return ((int32_t)music[pos++] << 24) | (music[pos++] << 16) | (music[pos++] << 8) | music[pos++];
 }
 

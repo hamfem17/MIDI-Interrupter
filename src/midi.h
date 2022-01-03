@@ -24,14 +24,15 @@ class MIDI
 {
     uint8_t* music;
     uint32_t pos = 0; 
-    uint16_t divison;
+    
 
     uint8_t nextByte();
     uint16_t nextWord();
-    uint16_t nextDWord();
+    uint32_t nextDWord();
 
     public:
     MIDI(uint8_t* music);
     uint8_t readHeader();
     Event getNextEvent();
+    uint16_t divison;
 };
