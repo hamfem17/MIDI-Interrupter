@@ -8,7 +8,7 @@ enum EventType
     NOTE_ON, 
     NOTE_OFF,
     SET_TEMPO,
-    END_OF_FILE
+    END_OF_TRACK
 };
 
 struct Event
@@ -20,16 +20,18 @@ struct Event
     uint32_t tempo;
 };
 
-class ICL
+class MIDI
 {
     uint8_t* music;
     uint32_t pos = 0; 
+    uint16_t divison;
 
     uint8_t nextByte();
     uint16_t nextWord();
+    uint16_t nextDWord();
 
     public:
-    ICL(uint8_t* music);
-    uint8_t validateHeader();
+    MIDI(uint8_t* music);
+    uint8_t readHeader();
     Event getNextEvent();
 };

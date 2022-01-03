@@ -6,7 +6,7 @@
 #include <SPI.h>
 
 #include "notes.h"
-#include "icl.h"
+#include "midi.h"
 #include "uart.h"
 #include "pwm.h"
 #include "deltaTimer.h"
@@ -26,7 +26,8 @@ int main()
 
 	#define MusicSize 414
 	int freq;
-
+	int size = 0;
+	uint8_t *midiFILE;
 
 	uint8_t music[MusicSize] = {
 		0x49, 0x43, 0x4c, 0x00, 0x01, 0x01, 0x75, 0x6e, 0x62, 0x65, 0x6e, 0x61, 0x6e, 0x6e, 0x74, 0x32,
@@ -58,9 +59,9 @@ int main()
 	};
 
 	/*
-	ICL decoder = ICL(music);
+	MIDI decoder = MIDI(music);
 
-	if(decoder.validateHeader())
+	if(decoder.readHeader())
 	{
 		return 1;
 	};
@@ -74,7 +75,7 @@ int main()
 		uart::writeInt(event.deltaTime);
 		uart::writeString("       ");
 
-		if(event.type == END_OF_FILE)
+		if(event.type == END_OF_TRACK)
 		{
 			break;
 		}
@@ -94,7 +95,7 @@ int main()
 			case SET_TEMPO:
 				DeltaTimer::setTempo(event.tempo);
 				break;
-			case END_OF_FILE:
+			case END_OF_TRACK:
 				break;
 
 		}
@@ -116,9 +117,13 @@ int main()
 		uart::debugString("ACDC_TNT.mid:\n");
 		int u = 0;
 
-		uart::debugInt(myFile.size());
+		size = myFile.size();
+		midiFILE = (uint8_t *)malloc(6);
 
-		while (myFile.available()) {
+		uart::debugInt(myFile.size());
+		uart::debugInt(sizeof(&midiFILE));
+
+		while (0) {
 			uart::debugHex(myFile.read());
 		}
 		

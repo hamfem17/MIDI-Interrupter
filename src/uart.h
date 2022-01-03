@@ -1,7 +1,7 @@
 #pragma once
 
 #include <avr/io.h>
-#include "icl.h"
+#include "midi.h"
 
 #define DEBUG
 

@@ -56,8 +56,8 @@ void uart::printEvent (Event event)
             uart::writeString("SET TEMPO  ");
             break;
 
-        case END_OF_FILE:
-            uart::writeString("END_OF_FILE");
+        case END_OF_TRACK:
+            uart::writeString("END_OF_TRACK");
     }
 
     uart::writeString(" | ");
@@ -99,8 +99,8 @@ void uart::debugEvent (Event event)
             uart::writeString("SET TEMPO  ");
             break;
 
-        case END_OF_FILE:
-            uart::writeString("END_OF_FILE");
+        case END_OF_TRACK:
+            uart::writeString("END_OF_TRACK");
     }
 
     uart::writeString(" | ");
