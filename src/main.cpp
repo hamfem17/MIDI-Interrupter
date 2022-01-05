@@ -10,6 +10,7 @@
 #include "uart.h"
 #include "pwm.h"
 #include "deltaTimer.h"
+#include "LCD/lcd.h"
 
 Sd2Card card;
 SdVolume volume;
@@ -53,15 +54,14 @@ int main()
 	int freq;
 	int size = 0;
 	uint8_t *midiFILE;
-
 	
-	
+	/*
 	initSD();
 
-  	myFile = SD.open("Harry.mid");
+  	myFile = SD.open("out.mid");
 	if (myFile)
 	{
-		uart::debugString("Harry.mid:\n");
+		uart::debugString("out.mid:\n");
 		int u = 0;
 
 		size = myFile.size();
@@ -133,7 +133,17 @@ int main()
 	{
 		uart::debugHex(midiFILE[i]);
 	}
+	*/
+
+
 	
+
+	lcd_init(LCD_DISP_ON_CURSOR); /*initialize lcd,display on, cursor on */
+	lcd_clrscr();             /* clear screen of lcd */
+	lcd_home();               /* bring cursor to 0,0 */
+	lcd_puts("hello");        /* type something random */
+	lcd_gotoxy(0,1);          /* go to 2nd row 1st col */
+	lcd_puts("Mechatronicslab");  /* type something random */
 
 
 	return 0;
