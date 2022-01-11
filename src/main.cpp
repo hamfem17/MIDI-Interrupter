@@ -2,7 +2,6 @@
 #include <util/delay.h>
 #include <math.h>
 #include <Arduino.h>
-#include <SD.h>
 #include <SPI.h>
 
 #include "notes.h"
@@ -11,6 +10,8 @@
 #include "pwm.h"
 #include "deltaTimer.h"
 #include "LCD/lcd.h"
+#include "SD.h"
+
 
 Sd2Card card;
 SdVolume volume;
@@ -44,6 +45,57 @@ void initSD()
 	uart::debugString("initialization done.\n");
 }
 
+class superFatFile : public SdFat_h
+{
+    public:
+    void ls(print_t* pr, uint8_t flags /* = 0 */, uint8_t indent /* = 0 */)
+	{
+        dir_t* p;
+
+		rewind();
+		while ((p = readDirCache())) 
+		{
+			// done if past last used entry
+			if (p->name[0] == DIR_NAME_FREE) break;
+
+			// skip deleted entry and entries for . and  ..
+			if (p->name[0] == DIR_NAME_DELETED || p->name[0] == '.') continue;
+
+			// only list subdirectories and files
+			if (!DIR_IS_FILE_OR_SUBDIR(p)) continue;
+
+			// print any indent spaces
+			for (int8_t i = 0; i < indent; i++) Serial.print(' ');
+
+			// print file name with possible blank fill
+			printDirName(*p, flags & (LS_DATE | LS_SIZE) ? 14 : 0);
+
+			// print modify date/time if requested
+			if (flags & LS_DATE) {
+			printFatDate(p->lastWriteDate);
+			Serial.print(' ');
+			printFatTime(p->lastWriteTime);
+			}
+			// print size if requested
+			if (!DIR_IS_SUBDIR(p) && (flags & LS_SIZE)) {
+			Serial.print(' ');
+			Serial.print(p->fileSize);
+			}
+			Serial.println();
+
+			// list subdirectory content if requested
+			if ((flags & LS_R) && DIR_IS_SUBDIR(p)) {
+			uint16_t index = curPosition()/32 - 1;
+			SdFile s;
+			if (s.open(this, index, O_READ)) s.ls(flags, indent + 2);
+			seekSet(32 * (index + 1));
+			}
+		}
+	}
+	file.close();
+	// end of new LS method
+};  // end of superClass
+
 int main()
 {
 	uart::init();
@@ -55,7 +107,6 @@ int main()
 	int size = 0;
 	uint8_t *midiFILE;
 	
-	/*
 	initSD();
 
   	myFile = SD.open("out.mid");
@@ -77,13 +128,58 @@ int main()
 			midiFILE[i] = myFile.read();
 		}
 		
-		myFile.close();
+		
 	} else {
 
 		uart::debugString("error opening test.txt\n");
 	}
 
+	root.openRoot(volume);
+	root.ls(LS_R | LS_DATE | LS_SIZE);
+	
 
+/*
+	dir_t* p;
+	rewind();
+  	while ((p = readDirCache())) {
+    // done if past last used entry
+    if (p->name[0] == DIR_NAME_FREE) break;
+
+    // skip deleted entry and entries for . and  ..
+    if (p->name[0] == DIR_NAME_DELETED || p->name[0] == '.') continue;
+
+    // only list subdirectories and files
+    if (!DIR_IS_FILE_OR_SUBDIR(p)) continue;
+
+    // print any indent spaces
+    for (int8_t i = 0; i < indent; i++) Serial.print(' ');
+
+    // print file name with possible blank fill
+    printDirName(*p, flags & (LS_DATE | LS_SIZE) ? 14 : 0);
+
+    // print modify date/time if requested
+    if (flags & LS_DATE) {
+       printFatDate(p->lastWriteDate);
+       Serial.print(' ');
+       printFatTime(p->lastWriteTime);
+    }
+    // print size if requested
+    if (!DIR_IS_SUBDIR(p) && (flags & LS_SIZE)) {
+      Serial.print(' ');
+      Serial.print(p->fileSize);
+    }
+    Serial.println();
+
+    // list subdirectory content if requested
+    if ((flags & LS_R) && DIR_IS_SUBDIR(p)) {
+      uint16_t index = curPosition()/32 - 1;
+      SdFile s;
+      if (s.open(this, index, O_READ)) s.ls(flags, indent + 2);
+      seekSet(32 * (index + 1));
+    }
+	}
+
+	
 	MIDI decoder = MIDI(midiFILE);
 
 	if(decoder.readHeader())
@@ -128,15 +224,9 @@ int main()
 
 		}
 	}
-
-	for(int i = 0; i < size; i++)
-	{
-		uart::debugHex(midiFILE[i]);
-	}
 	*/
-
-
 	
+	myFile.close();
 
 	lcd_init(LCD_DISP_ON_CURSOR); /*initialize lcd,display on, cursor on */
 	lcd_clrscr();             /* clear screen of lcd */
