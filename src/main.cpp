@@ -39,12 +39,9 @@ namespace SD {
 		
 		SPI_transmit(startBits | index);
 		// argument
-		if(index == 8) {
-			DDRC |= (1 << PC1);
-			PORTC |= (1 << PC1);
-		}
-		for (uint8_t i = 0; i < 4; i++) {
-			SPI_transmit((argument > i) & 0xFF);
+
+		for (uint8_t i = 0; i < 32; i+=8) {
+			SPI_transmit((argument >> (24 - i)) & 0xFF);
 		}
 
 		if(index == 8) {
@@ -54,9 +51,19 @@ namespace SD {
 		}
 
 		uint8_t r1;
-		do {
+
+		for(uint8_t i = 0; i < 20; i++) {
 			r1 = SPI_transmit(0xFF);
-		} while (r1 & 0x80);
+			if(!(r1 & 0x80)) {
+				break;
+			}
+		}
+		if(r3 != nullptr) {
+			for(uint8_t i = 0; i < 4; i++) {
+				*r3 = (*r3 << 8) | SPI_transmit(0xFF);
+			}
+		}
+
 		return r1;
 	}
 
@@ -92,10 +99,26 @@ int main()
 
 	_delay_us(10);
 
+
 	uint8_t data = SD::sendCommand(0, 0);
 	uart::writeInt(data);
 
-	data = SD::sendCommand(8, 0x1AA);
+
+	uint32_t r3;
+	data = SD::sendCommand(8, 0x1AA, &r3);
+	uart::writeInt(data);
+	if(data == 0x05) {
+		uart::writeString("CMD8 illegal");
+	}
+	
+	_delay_us(2);
+		DDRC |= (1 << PC1);
+		PORTC |= (1 << PC1);
+		
+	data = SD::sendCommand(55, 0);
+	uart::writeInt(data);
+
+	data = SD::sendCommand(41, 0);
 	uart::writeInt(data);
 
 	while(1);
