@@ -24,27 +24,69 @@ void error()
 	}
 }
 
-void SPI_send(uint8_t data) {
+uint8_t SPI_transmit(uint8_t data) {
 	SPDR = data;
 	// Wait until the transmission is complete
 	while(!(SPSR & (1<<SPIF))){}
+	//_delay_us(10);
+	return SPDR;
 }
 
 int main()
 {
 	uart::init();
-	DeltaTimer::init();
-	PWM::init();
+	//DeltaTimer::init();
+	//PWM::init();
 
 	// Set SCK and MOSI as output
 	DDRB |= (1 << PB1) | (1 << PB2);
 
-	// Enable SPI, set Master Mode, set LSB first, set prescaler to 128
-	SPCR = (1 << SPE) | (1 << MSTR) | (1 << DORD) | (1 << SPR0) | (1 << SPR1);
+	// Set SS as output and set HIGH to set SD card in SPI mode
+	DDRB |= (1 << PB0); // If the SS pin isn't manually set as output, SPI won't do anything
+	PORTB |= (1 << PB0);
+
+	// Enable SPI, set Master Mode, (set LSB first,) set prescaler to 128
+	SPCR = (1 << SPE) | (1 << MSTR) /*| (1 << DORD)*/ | (1 << SPR0) | (1 << SPR1);
+
+	
+	_delay_us(10);
+
+	for(int i = 0; i < 8; i++)
+	{
+		SPI_transmit(0xFF);
+	}
+
+	_delay_us(20);
+
+	PORTB &= ~(1 << PB0);
+
+	_delay_us(20);
 
 	// Transmit reset command
 	#define startBits 0b01000000
-	SPI_send(startBits | 0);
+	
+	//SPI_transmit(0xFF);
+
+	SPI_transmit(startBits | 0);
+	// argument
+	SPI_transmit(0x00);
+	SPI_transmit(0x00);
+	SPI_transmit(0x00);
+	SPI_transmit(0x00);
+
+	// dummy CRC and stop bit
+	SPI_transmit(0x01);
+	_delay_us(10);
+
+	uint8_t data;
+	do {
+		data = SPI_transmit(0xFF);
+	} while (data == 0xFF);
+	
+	uart::writeInt(data);
+
+	while(1);
+
 
 	int freq;
 	int size = 0;
@@ -146,6 +188,5 @@ int main()
 	lcd_puts("Felix");  /* type something random */
 
 	while(1);
-
 	return 0;
 }
