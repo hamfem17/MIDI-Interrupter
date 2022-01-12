@@ -32,6 +32,36 @@ uint8_t SPI_transmit(uint8_t data) {
 	return SPDR;
 }
 
+namespace SD {
+	uint8_t sendCommand(uint8_t index, uint32_t argument, uint32_t *r3 = nullptr) {
+		// Transmit reset command
+		#define startBits 0b01000000
+		
+		SPI_transmit(startBits | index);
+		// argument
+		if(index == 8) {
+			DDRC |= (1 << PC1);
+			PORTC |= (1 << PC1);
+		}
+		for (uint8_t i = 0; i < 4; i++) {
+			SPI_transmit((argument > i) & 0xFF);
+		}
+
+		if(index == 8) {
+			SPI_transmit(0x87);
+		} else {
+			SPI_transmit(0x01);
+		}
+
+		uint8_t r1;
+		do {
+			r1 = SPI_transmit(0xFF);
+		} while (r1 & 0x80);
+		return r1;
+	}
+
+};
+
 int main()
 {
 	uart::init();
@@ -56,33 +86,16 @@ int main()
 		SPI_transmit(0xFF);
 	}
 
-	_delay_us(20);
+	_delay_us(10);
 
 	PORTB &= ~(1 << PB0);
 
-	_delay_us(20);
-
-	// Transmit reset command
-	#define startBits 0b01000000
-	
-	//SPI_transmit(0xFF);
-
-	SPI_transmit(startBits | 0);
-	// argument
-	SPI_transmit(0x00);
-	SPI_transmit(0x00);
-	SPI_transmit(0x00);
-	SPI_transmit(0x00);
-
-	// dummy CRC and stop bit
-	SPI_transmit(0x01);
 	_delay_us(10);
 
-	uint8_t data;
-	do {
-		data = SPI_transmit(0xFF);
-	} while (data == 0xFF);
-	
+	uint8_t data = SD::sendCommand(0, 0);
+	uart::writeInt(data);
+
+	data = SD::sendCommand(8, 0x1AA);
 	uart::writeInt(data);
 
 	while(1);
