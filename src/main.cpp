@@ -8,6 +8,7 @@
 #include "pwm.h"
 #include "deltaTimer.h"
 #include "LCD/lcd.h"
+#include "pff/diskio.h"
 
 const int chipSelect = 53;
 
@@ -34,31 +35,33 @@ uint8_t SPI_transmit(uint8_t data) {
 
 namespace SD {
 	uint8_t sendCommand(uint8_t index, uint32_t argument, uint32_t *r3 = nullptr) {
-		// Transmit reset command
-		#define startBits 0b01000000
 		
-		SPI_transmit(startBits | index);
-		// argument
+		// transmit start bits and command index
+		SPI_transmit(0b01000000 | index);
 
+		// transmit argument
 		for (uint8_t i = 0; i < 32; i+=8) {
 			SPI_transmit((argument >> (24 - i)) & 0xFF);
 		}
 
+		// transmit CRC and stop bit
 		if(index == 8) {
 			SPI_transmit(0x87);
 		} else {
 			SPI_transmit(0x01);
 		}
 
+		// get R1 response
 		uint8_t r1;
-
 		for(uint8_t i = 0; i < 20; i++) {
 			r1 = SPI_transmit(0xFF);
 			if(!(r1 & 0x80)) {
 				break;
 			}
 		}
-		if(r3 != nullptr) {
+
+		// get R3 response if present
+		if(index == 8) {
 			for(uint8_t i = 0; i < 4; i++) {
 				*r3 = (*r3 << 8) | SPI_transmit(0xFF);
 			}
@@ -67,59 +70,75 @@ namespace SD {
 		return r1;
 	}
 
+	void init() {
+		// Set SCK and MOSI as output
+		DDRB |= (1 << PB1) | (1 << PB2);
+
+		// Set SS as output and set HIGH to set SD card in SPI mode
+		DDRB |= (1 << PB0); // If the SS pin isn't manually set as output, SPI won't do anything
+		PORTB |= (1 << PB0);
+
+		// Enable SPI, set Master Mode, (set LSB first,) set prescaler to 128
+		SPCR = (1 << SPE) | (1 << MSTR) /*| (1 << DORD)*/ | (1 << SPR0) | (1 << SPR1);
+
+		_delay_us(10);
+
+		for(int i = 0; i < 8; i++)
+		{
+			SPI_transmit(0xFF);
+		}
+
+		_delay_us(10);
+
+		PORTB &= ~(1 << PB0);
+
+		_delay_us(10);
+
+	}
 };
 
 int main()
 {
 	uart::init();
+	
 	//DeltaTimer::init();
 	//PWM::init();
-
-	// Set SCK and MOSI as output
-	DDRB |= (1 << PB1) | (1 << PB2);
-
-	// Set SS as output and set HIGH to set SD card in SPI mode
-	DDRB |= (1 << PB0); // If the SS pin isn't manually set as output, SPI won't do anything
-	PORTB |= (1 << PB0);
-
-	// Enable SPI, set Master Mode, (set LSB first,) set prescaler to 128
-	SPCR = (1 << SPE) | (1 << MSTR) /*| (1 << DORD)*/ | (1 << SPR0) | (1 << SPR1);
-
+/*
+	SD::init();
 	
-	_delay_us(10);
-
-	for(int i = 0; i < 8; i++)
-	{
-		SPI_transmit(0xFF);
-	}
-
-	_delay_us(10);
-
-	PORTB &= ~(1 << PB0);
-
-	_delay_us(10);
-
-
-	uint8_t data = SD::sendCommand(0, 0);
-	uart::writeInt(data);
+	uint8_t r1 = SD::sendCommand(0, 0);
+	uart::writeInt(r1);
 
 
 	uint32_t r3;
-	data = SD::sendCommand(8, 0x1AA, &r3);
-	uart::writeInt(data);
-	if(data == 0x05) {
+	r1 = SD::sendCommand(8, 0x1AA, &r3);
+	uart::writeInt(r1);
+	if(r1 == 0x05) {
 		uart::writeString("CMD8 illegal");
 	}
 	
 	_delay_us(2);
 		DDRC |= (1 << PC1);
 		PORTC |= (1 << PC1);
-		
-	data = SD::sendCommand(55, 0);
-	uart::writeInt(data);
 
-	data = SD::sendCommand(41, 0);
-	uart::writeInt(data);
+	do { // Send ACMD41 until card is ready
+		r1 = SD::sendCommand(55, 0);
+		uart::writeInt(r1);
+
+		r1 = SD::sendCommand(41, 0x40000000);
+		uart::writeInt(r1);
+	} while(r1 != 0);
+
+	r1 = SD::sendCommand(58, 0, &r3);
+	uart::writeInt(r1);
+	uart::writeInt(r3);
+*/
+
+	DDRC |= (1 << PC1);
+	PORTC |= (1 << PC1);
+	if(disk_initialize() == 0) {
+		uart::writeString("Yee");
+	}
 
 	while(1);
 
