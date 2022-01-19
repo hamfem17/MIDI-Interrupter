@@ -11,8 +11,11 @@
 
 #define CMD0 0
 #define CMD8 8
+#define CMD17 17
 #define CMD41 41
 #define CMD55 55
+
+#define SD_MAX_READ_ATTEMPTS    1563
 
 void debug_bin(uint8_t data) {
 	for(uint8_t i = 0; i < 8; i++) {
@@ -79,6 +82,11 @@ uint8_t send_command(uint8_t command, uint32_t argument)
 		r1 = spi_transmit(0xFF);
 	} while((r1 & 0x80) && --n);
 
+	CS_LOW();
+	spi_transmit(0xFF);
+	CS_HIGH();
+	spi_transmit(0xFF);
+
 	return r1;
 }
 
@@ -143,9 +151,46 @@ DRESULT disk_readp (
 	UINT count		/* Byte count (bit15:destination) */
 )
 {
-	DRESULT res;
+    uint8_t res1; 
+	uint8_t read;
+    uint16_t readAttempts;
 
-	// Put your code here
+	DRESULT res = RES_ERROR;
+
+	CS_HIGH();
+	spi_transmit(0xFF);
+	CS_LOW();
+	spi_transmit(0xFF);
+
+	res1 = send_command(CMD17, sector * 512 + offset);
+
+ 	if(res1 != 0xFF)
+    {
+		readAttempts = 0;
+        while(++readAttempts != SD_MAX_READ_ATTEMPTS)
+            if((read = spi_transmit(0xFF)) != 0xFF) break;
+
+        // if response token is 0xFE
+        if(read == 0xFE)
+        {
+            // read 512 byte block
+            for(uint16_t i = 0; i < 512; i++)
+			{
+				*(buff++) = spi_transmit(0xFF);
+			}
+			
+            // read 16-bit CRC
+            spi_transmit(0xFF);
+            spi_transmit(0xFF);
+		}
+
+		res = RES_ERROR;
+	}
+
+	CS_LOW();
+	spi_transmit(0xFF);
+	CS_HIGH();
+	spi_transmit(0xFF);
 
 	return res;
 }
