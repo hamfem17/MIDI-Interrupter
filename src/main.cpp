@@ -97,6 +97,8 @@ namespace SD {
 	}
 };
 
+FATFS working_area;
+
 int main()
 {
 	uart::init();
@@ -133,11 +135,40 @@ int main()
 	uart::writeInt(r1);
 	uart::writeInt(r3);
 */
-
-	DDRC |= (1 << PC1);
-	PORTC |= (1 << PC1);
+/*
 	if(disk_initialize() == 0) {
 		uart::writeString("Yee");
+	}
+
+	//DDRC |= (1 << PC1);
+	//PORTC |= (1 << PC1);
+	uint8_t buff[512];
+	for(int i = 0; i < 512; i++) {
+		buff[i] = 0xab;
+	}
+	int res = disk_readp(buff, 1, 0x1c2, 2);
+	uart::writeInt(res);
+	for(int i = 0; i < 2; i++) {
+		uart::debugHex(buff[i]);
+	}*/
+
+	int res1 = pf_mount(&working_area);
+	uart::writeInt(res1);
+
+	res1 = pf_open("out.mid");
+	uart::writeInt(res1);
+
+	uint8_t outmid[568];
+	for(int i = 0; i < 568; i++) {
+		outmid[i] = 0xab;
+	}
+	unsigned int *bytes_read;
+	res1 = pf_read(outmid, 568, bytes_read);
+	uart::writeInt(res1);
+	uart::writeInt(*bytes_read);
+
+	for(int i = 0; i < 568; i++) {
+		uart::debugHex(outmid[i]);
 	}
 
 	while(1);

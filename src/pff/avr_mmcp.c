@@ -82,11 +82,6 @@ uint8_t send_command(uint8_t command, uint32_t argument)
 		r1 = spi_transmit(0xFF);
 	} while((r1 & 0x80) && --n);
 
-	CS_LOW();
-	spi_transmit(0xFF);
-	CS_HIGH();
-	spi_transmit(0xFF);
-
 	return r1;
 }
 
@@ -110,7 +105,6 @@ DSTATUS disk_initialize()
 
 	init_spi();
 
-	CS_HIGH();
 	for(uint8_t i = 0; i < 10; i++)
 	{
 		spi_transmit(0xFF); // 80 clock cycles with CS and MOSI high
@@ -119,6 +113,8 @@ DSTATUS disk_initialize()
 	r1 = send_command(CMD0, 0);
 	if(r1 != 1)
 	{
+		DDRB |= (1 << 7);
+		PORTB |= (1 << 7);
 		return STA_NOINIT;
 	}
 	r1 = send_command(CMD8, 0x1AA);
@@ -132,8 +128,6 @@ DSTATUS disk_initialize()
 	} else { // SDv1 or MMCv3
 	}
 
-	CS_HIGH();
-	spi_transmit(0xFF);
 
 	return 0;
 }
@@ -151,8 +145,8 @@ DRESULT disk_readp (
 	UINT count		/* Byte count (bit15:destination) */
 )
 {
-    uint8_t res1; 
-	uint8_t read;
+    uint8_t r1; 
+	uint8_t res_token;
     uint16_t readAttempts;
 
 	DRESULT res = RES_ERROR;
@@ -162,29 +156,38 @@ DRESULT disk_readp (
 	CS_LOW();
 	spi_transmit(0xFF);
 
-	res1 = send_command(CMD17, sector * 512 + offset);
+	r1 = send_command(CMD17, sector);
 
- 	if(res1 != 0xFF)
+
+ 	if(r1 != 0xFF)
     {
 		readAttempts = 0;
         while(++readAttempts != SD_MAX_READ_ATTEMPTS)
-            if((read = spi_transmit(0xFF)) != 0xFF) break;
-
-        // if response token is 0xFE
-        if(read == 0xFE)
-        {
-            // read 512 byte block
-            for(uint16_t i = 0; i < 512; i++)
-			{
-				*(buff++) = spi_transmit(0xFF);
-			}
-			
-            // read 16-bit CRC
-            spi_transmit(0xFF);
-            spi_transmit(0xFF);
+		{
+            if((res_token = spi_transmit(0xFF)) != 0xFF) break;
 		}
 
-		res = RES_ERROR;
+        if(res_token == 0xFE)
+        {
+            // read 512 byte block
+			for(uint16_t i = 0; i < offset; i++) {
+				spi_transmit(0xFF); // discard data from (0) to (offset)
+			}
+            for(uint16_t i = offset; i < offset + count; i++)
+			{
+				*(buff++) = spi_transmit(0xFF); // safe data from (offset) to (offset + count)
+			}
+			for(uint16_t i = offset + count; i < 512; i++) {
+				spi_transmit(0xFF); // discard data from (offset + count) to (512)
+			}
+			
+            // read and ignore 16-bit CRC
+            spi_transmit(0xFF);
+            spi_transmit(0xFF);
+
+			res = RES_OK;
+		}
+
 	}
 
 	CS_LOW();
