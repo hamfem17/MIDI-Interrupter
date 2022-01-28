@@ -1,6 +1,8 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <math.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "notes.h"
 #include "midi.h"
@@ -102,10 +104,10 @@ FATFS working_area;
 int main()
 {
 	uart::init();
-	
 	DeltaTimer::init();
 	PWM::init();
 
+	uart::writeString("start\n");
 
 	int res1 = pf_mount(&working_area);
 	//uart::writeInt(res1);
@@ -115,35 +117,46 @@ int main()
 
 	FILINFO fno;
 
-
 	// get number of entries
 	uint16_t numberOfFiles = 0; // up to 65536 files
-	do {
+	while(1) {
 		pf_readdir(&dp, &fno);
-	} while(fno.fname[0] != 0);
+		if(fno.fname[0] == 0) break;
+		else numberOfFiles++;
+	}
+	pf_readdir(&dp, NULL); // rewind read index
 
+
+	char** files = (char**)malloc(numberOfFiles * sizeof(char*) + 1);
+
+	for(size_t i = 0; i < numberOfFiles; i++) {
+		pf_readdir(&dp, &fno);
+		files[i] = (char*)malloc(strlen(fno.fname)+1);
+		strcpy(files[i], fno.fname);
+	}
+
+	files[numberOfFiles] = nullptr;
+
+	for(size_t i = 0; files[i]; i++) {
+		uart::writeString(files[i]);
+		uart::writeString("\n");
+	}
+
+	while(1);
 	
-
-	
-
 	res1 = pf_open("out.mid");
-	//uart::writeInt(res1);
 
 	uint8_t outmid[568];
-	for(int i = 0; i < 568; i++) {
-		outmid[i] = 0xab;
-	}
+
 	unsigned int bytes_read;
 	bytes_read = 0; // otherwise pf_read won't work
 	res1 = pf_read(outmid, 568, &bytes_read);
-	uart::writeInt(res1);
-	uart::writeString("   ");
-	uart::writeInt(bytes_read);
 
 	/*for(int i = 0; i < 568; i++) {
 		uart::debugHex(outmid[i]);
 		uart::writeString("\n");
 	}*/
+
 
 	int freq;
 	int size = 0;
