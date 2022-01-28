@@ -917,8 +917,39 @@ FRESULT pf_open (
 	return FR_OK;
 }
 
+#include <avr/io.h>
 
+void writeString (char str[])
+{
+    for (int i = 0; str[i] != 0; i++)
+    {
+        while ( !( UCSR0A & (1 << UDRE0)) )
+        {
+            // wait, until UDR0 is available again
+        }
+        UDR0 = str[i];
+    }
+}
 
+void debugInt (uint32_t number)
+{
+    char s[100];
+
+    ltoa(number,s,10);    //itoa is integer with 16 Bit but need 32 bit
+    uint8_t len;
+    for(int i = 0; i < 100; i++)
+    {
+        if(s[i] == 0)
+        {
+            len = i;
+            break;
+        }
+    }
+
+	writeString(";");
+    writeString(s);
+	writeString("\n");
+}
 
 /*-----------------------------------------------------------------------*/
 /* Read File                                                             */
@@ -964,6 +995,10 @@ FRESULT pf_read (
 		}
 		rcnt = 512 - (UINT)fs->fptr % 512;			/* Get partial sector data from sector buffer */
 		if (rcnt > btr) rcnt = btr;
+		debugInt(fs->dsect);
+		debugInt((UINT)fs->fptr % 512);
+		debugInt(rcnt);
+		writeString("\n");
 		dr = disk_readp(rbuff, fs->dsect, (UINT)fs->fptr % 512, rcnt);
 		if (dr) ABORT(FR_DISK_ERR);
 		fs->fptr += rcnt;							/* Advances file read pointer */

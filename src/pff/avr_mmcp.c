@@ -151,6 +151,8 @@ DRESULT disk_readp (
 
 	DRESULT res = RES_ERROR;
 
+	if(count + offset > 512) return RES_ERROR;
+
 	CS_HIGH();
 	spi_transmit(0xFF);
 	CS_LOW();

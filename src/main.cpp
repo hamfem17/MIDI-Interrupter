@@ -103,124 +103,53 @@ int main()
 {
 	uart::init();
 	
-	//DeltaTimer::init();
-	//PWM::init();
-/*
-	SD::init();
-	
-	uint8_t r1 = SD::sendCommand(0, 0);
-	uart::writeInt(r1);
+	DeltaTimer::init();
+	PWM::init();
 
-
-	uint32_t r3;
-	r1 = SD::sendCommand(8, 0x1AA, &r3);
-	uart::writeInt(r1);
-	if(r1 == 0x05) {
-		uart::writeString("CMD8 illegal");
-	}
-	
-	_delay_us(2);
-		DDRC |= (1 << PC1);
-		PORTC |= (1 << PC1);
-
-	do { // Send ACMD41 until card is ready
-		r1 = SD::sendCommand(55, 0);
-		uart::writeInt(r1);
-
-		r1 = SD::sendCommand(41, 0x40000000);
-		uart::writeInt(r1);
-	} while(r1 != 0);
-
-	r1 = SD::sendCommand(58, 0, &r3);
-	uart::writeInt(r1);
-	uart::writeInt(r3);
-*/
-/*
-	if(disk_initialize() == 0) {
-		uart::writeString("Yee");
-	}
-
-	//DDRC |= (1 << PC1);
-	//PORTC |= (1 << PC1);
-	uint8_t buff[512];
-	for(int i = 0; i < 512; i++) {
-		buff[i] = 0xab;
-	}
-	int res = disk_readp(buff, 1, 0x1c2, 2);
-	uart::writeInt(res);
-	for(int i = 0; i < 2; i++) {
-		uart::debugHex(buff[i]);
-	}*/
 
 	int res1 = pf_mount(&working_area);
-	uart::writeInt(res1);
+	//uart::writeInt(res1);
+
+	DIR dp;
+	res1 = pf_opendir(&dp, "/");
+
+	FILINFO fno;
+
+
+	// get number of entries
+	uint16_t numberOfFiles = 0; // up to 65536 files
+	do {
+		pf_readdir(&dp, &fno);
+	} while(fno.fname[0] != 0);
+
+	
+
+	
 
 	res1 = pf_open("out.mid");
-	uart::writeInt(res1);
+	//uart::writeInt(res1);
 
 	uint8_t outmid[568];
 	for(int i = 0; i < 568; i++) {
 		outmid[i] = 0xab;
 	}
-	unsigned int *bytes_read;
-	res1 = pf_read(outmid, 568, bytes_read);
+	unsigned int bytes_read;
+	bytes_read = 0; // otherwise pf_read won't work
+	res1 = pf_read(outmid, 568, &bytes_read);
 	uart::writeInt(res1);
-	uart::writeInt(*bytes_read);
+	uart::writeString("   ");
+	uart::writeInt(bytes_read);
 
-	for(int i = 0; i < 568; i++) {
+	/*for(int i = 0; i < 568; i++) {
 		uart::debugHex(outmid[i]);
-	}
-
-	while(1);
-
+		uart::writeString("\n");
+	}*/
 
 	int freq;
 	int size = 0;
-	uint8_t *midiFILE;
-
-/*
-	dir_t* p;
-	rewind();
-  	while ((p = readDirCache())) {
-    // done if past last used entry
-    if (p->name[0] == DIR_NAME_FREE) break;
-
-    // skip deleted entry and entries for . and  ..
-    if (p->name[0] == DIR_NAME_DELETED || p->name[0] == '.') continue;
-
-    // only list subdirectories and files
-    if (!DIR_IS_FILE_OR_SUBDIR(p)) continue;
-
-    // print any indent spaces
-    for (int8_t i = 0; i < indent; i++) Serial.print(' ');
-
-    // print file name with possible blank fill
-    printDirName(*p, flags & (LS_DATE | LS_SIZE) ? 14 : 0);
-
-    // print modify date/time if requested
-    if (flags & LS_DATE) {
-       printFatDate(p->lastWriteDate);
-       Serial.print(' ');
-       printFatTime(p->lastWriteTime);
-    }
-    // print size if requested
-    if (!DIR_IS_SUBDIR(p) && (flags & LS_SIZE)) {
-      Serial.print(' ');
-      Serial.print(p->fileSize);
-    }
-    Serial.println();
-
-    // list subdirectory content if requested
-    if ((flags & LS_R) && DIR_IS_SUBDIR(p)) {
-      uint16_t index = curPosition()/32 - 1;
-      SdFile s;
-      if (s.open(this, index, O_READ)) s.ls(flags, indent + 2);
-      seekSet(32 * (index + 1));
-    }
-	}
-
+	//uint8_t *midiFILE;
 	
-	MIDI decoder = MIDI(midiFILE);
+	MIDI decoder = MIDI(outmid);
 
 	if(decoder.readHeader())
 	{
@@ -233,14 +162,16 @@ int main()
 	{
 		Event event = decoder.getNextEvent();
 
-		//uart::writeInt(event.deltaTime);
-		//uart::writeString("       ");
+		uart::writeInt(event.deltaTime);
+		uart::writeString("       ");
 
 		uart::debugEvent(event);
+		uart::writeString("\n");
 
 
 		if(event.type == END_OF_TRACK)
 		{
+			uart::writeString("done");
 			break;
 		}
 
@@ -264,8 +195,8 @@ int main()
 
 		}
 	}
-	*/
 	
+
 	lcd_init(LCD_DISP_ON_CURSOR); /*initialize lcd,display on, cursor on */
 	lcd_clrscr();             /* clear screen of lcd */
 	lcd_home();               /* bring cursor to 0,0 */
