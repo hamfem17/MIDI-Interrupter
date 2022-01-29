@@ -1,5 +1,5 @@
-#include "midi.h"
-#include "uart.h"
+#include "include/midi.h"
+#include "include/uart.h"
 
 MIDI::MIDI(uint8_t* music)
 {

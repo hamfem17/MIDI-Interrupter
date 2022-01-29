@@ -5,102 +5,17 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "notes.h"
-#include "midi.h"
-#include "uart.h"
-#include "pwm.h"
-#include "deltaTimer.h"
-#include "rotary.h"
+#include "include/notes.h"
+#include "include/midi.h"
+#include "include/uart.h"
+#include "include/pwm.h"
+#include "include/deltaTimer.h"
+#include "include/rotary.h"
+#include "include/menu.h"
 #include "LCD/lcd.h"
 #include "pff/diskio.h"
 
 const int chipSelect = 53;
-
-void error()
-{
-	DDRB |= (1 << 7);	//Pin 13 als Ausgang (LED)
-
-	while(1)
-	{ 
-		PORTB |= (1 << 7);
-		_delay_ms(250);
-		PORTB &= ~(1 << 7);
-		_delay_ms(250);
-	}
-}
-
-uint8_t SPI_transmit(uint8_t data) {
-	SPDR = data;
-	// Wait until the transmission is complete
-	while(!(SPSR & (1<<SPIF))){}
-	//_delay_us(10);
-	return SPDR;
-}
-
-namespace SD {
-	uint8_t sendCommand(uint8_t index, uint32_t argument, uint32_t *r3 = nullptr) {
-		
-		// transmit start bits and command index
-		SPI_transmit(0b01000000 | index);
-
-		// transmit argument
-		for (uint8_t i = 0; i < 32; i+=8) {
-			SPI_transmit((argument >> (24 - i)) & 0xFF);
-		}
-
-		// transmit CRC and stop bit
-		if(index == 8) {
-			SPI_transmit(0x87);
-		} else {
-			SPI_transmit(0x01);
-		}
-
-		// get R1 response
-		uint8_t r1;
-		for(uint8_t i = 0; i < 20; i++) {
-			r1 = SPI_transmit(0xFF);
-			if(!(r1 & 0x80)) {
-				break;
-			}
-		}
-
-		// get R3 response if present
-		if(index == 8) {
-			for(uint8_t i = 0; i < 4; i++) {
-				*r3 = (*r3 << 8) | SPI_transmit(0xFF);
-			}
-		}
-
-		return r1;
-	}
-
-	void init() {
-		// Set SCK and MOSI as output
-		DDRB |= (1 << PB1) | (1 << PB2);
-
-		// Set SS as output and set HIGH to set SD card in SPI mode
-		DDRB |= (1 << PB0); // If the SS pin isn't manually set as output, SPI won't do anything
-		PORTB |= (1 << PB0);
-
-		// Enable SPI, set Master Mode, (set LSB first,) set prescaler to 128
-		SPCR = (1 << SPE) | (1 << MSTR) /*| (1 << DORD)*/ | (1 << SPR0) | (1 << SPR1);
-
-		_delay_us(10);
-
-		for(int i = 0; i < 8; i++)
-		{
-			SPI_transmit(0xFF);
-		}
-
-		_delay_us(10);
-
-		PORTB &= ~(1 << PB0);
-
-		_delay_us(10);
-
-	}
-};
-
 
 int main()
 {
@@ -108,9 +23,11 @@ int main()
 	DeltaTimer::init();
 	PWM::init();
 	rotary::init();
+	lcd_init(LCD_DISP_ON_CURSOR); /*initialize lcd,display on, cursor on */
 
 	uart::writeString("done initializing\n");
 
+	EIFR |= (1 << INTF4); // otherwise INT4_vect will be executed immediatly
 	sei();
 
 	FATFS working_area;
@@ -139,12 +56,12 @@ int main()
 		else if(fno.fattrib & AM_DIR) continue;
 		else numberOfFiles++;
 	}
-	pf_readdir(&dp, NULL); // rewind read index
+	pf_readdir(&dp, nullptr); // rewind read index
 	uart::writeString("Number of files: ");
 	uart::writeInt(numberOfFiles);
 	uart::writeString("\n");
 
-	char** files = (char**)malloc(numberOfFiles * sizeof(char*) + 1);
+	char** files = (char**)malloc(numberOfFiles * sizeof(char*) + 1); // maybe add 2?
 
 	for(size_t i = 0; i < numberOfFiles;) {
 		pf_readdir(&dp, &fno);
@@ -161,24 +78,22 @@ int main()
 		uart::writeString("\n");
 	}
 
+	uint8_t selection = menu::selectItem(files);
 
-	rotary::watch();
-	while(1);
-	/*
-	pf_open("out.mid");
+	pf_open(files[selection]);
 
 	uint8_t outmid[568];
 
 	unsigned int bytes_read;
 	bytes_read = 0; // otherwise pf_read won't work
 	res1 = pf_read(outmid, 568, &bytes_read);
-*/
+
 	/*for(int i = 0; i < 568; i++) {
 		uart::debugHex(outmid[i]);
 		uart::writeString("\n");
 	}*/
 
-/*
+
 	int freq;
 	int size = 0;
 	//uint8_t *midiFILE;
@@ -229,14 +144,7 @@ int main()
 
 		}
 	}
-	*/
 
-	lcd_init(LCD_DISP_ON_CURSOR); /*initialize lcd,display on, cursor on */
-	lcd_clrscr();             /* clear screen of lcd */
-	lcd_home();               /* bring cursor to 0,0 */
-	lcd_puts("Hallo");        /* type something random */
-	lcd_gotoxy(0,1);          /* go to 2nd row 1st col */
-	lcd_puts("Felix");  /* type something random */
 
 	while(1);
 	return 0;

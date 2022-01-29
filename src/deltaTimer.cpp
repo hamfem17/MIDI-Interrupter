@@ -1,7 +1,7 @@
 #include <avr/interrupt.h>
 
-#include "uart.h"
-#include "deltaTimer.h"
+#include "include/uart.h"
+#include "include/deltaTimer.h"
 
 namespace DeltaTimer
 {
