@@ -14,7 +14,6 @@ void DeltaTimer::init()
     TCCR2B |= (1 << CS22) | (1 << CS21);
 
     TIMSK2 |= (1 << TOIE2);
-    sei();
 }
 
 void DeltaTimer::delay(uint32_t deltatime)
