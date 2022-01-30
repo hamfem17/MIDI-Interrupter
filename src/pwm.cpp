@@ -27,12 +27,16 @@ void PWM::start(int freq)
     if(t1.isFree)
     {
         t1.start(freq);
+        PORTC |= (1 << PC0);
     } else if(t3.isFree) {
         t3.start(freq);
+        PORTC |= (1 << PC1);
     } else if(t4.isFree) {
         t4.start(freq);
+        PORTC |= (1 << PC2);
     } else if(t5.isFree) {
         t5.start(freq);
+        PORTC |= (1 << PC3);
     }
 }
 
@@ -40,12 +44,16 @@ void PWM::stop(int freq)
 {
     if(t1.freq == freq) {
         t1.stop();
+        PORTC &= ~(1 << PC0);
     } else if(t3.freq == freq) {
         t3.stop();
+        PORTC &= ~(1 << PC1);
     } else if(t4.freq == freq) {
         t4.stop();
+        PORTC &= ~(1 << PC2);
     } else if(t5.freq == freq) {
         t5.stop();
+        PORTC &= ~(1 << PC3);
     }
 }
 
@@ -70,4 +78,7 @@ void PWM::init() {
 	TCCR3B |= (1 << CS32) | (1 << WGM33);
 	TCCR4B |= (1 << CS42) | (1 << WGM43);
 	TCCR5B |= (1 << CS52) | (1 << WGM53);
+
+    // LEDs
+    DDRC |= (1 << PC0) | (1 << PC1) | (1 << PC2) | (1 << PC3);
 }

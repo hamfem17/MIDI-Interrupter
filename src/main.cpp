@@ -34,6 +34,8 @@ int main()
 	int res1 = pf_mount(&working_area);
 	if(res1) {
 		uart::writeString("Failed mounting SD device\n");
+		menu::print("Mount Error");
+		return 1;
 	} else {
 		uart::writeString("mounted SD device\n");
 	}
@@ -42,6 +44,8 @@ int main()
 	res1 = pf_opendir(&dp, "/");
 	if(res1) {
 		uart::writeString("Failed opening \"/\"\n");
+		menu::print("Opening Error");
+		return 1;
 	} else {
 		uart::writeString("Opened \"/\"\n");
 	}
@@ -82,11 +86,20 @@ int main()
 
 	pf_open(files[selection]);
 
-	uint8_t outmid[568];
+	uint8_t outmid[7000];
 
 	unsigned int bytes_read;
 	bytes_read = 0; // otherwise pf_read won't work
-	res1 = pf_read(outmid, 568, &bytes_read);
+	res1 = pf_read(outmid, 7000, &bytes_read);
+	if(res1) {
+		uart::writeString("Could not read file\n");
+		uart::writeString("Error ");
+		uart::writeInt(res1);
+		menu::print("Read Error");
+		return 1;
+	} else {
+		uart::writeString("Read file\n");
+	}
 
 	/*for(int i = 0; i < 568; i++) {
 		uart::debugHex(outmid[i]);
@@ -106,16 +119,16 @@ int main()
 	};
 
 	uart::writeString("  DT | EVENT TYPE  | NOTE\n");
-
+	menu::print("Playing...");
 	while(1)
 	{
 		Event event = decoder.getNextEvent();
 
-		uart::writeInt(event.deltaTime);
-		uart::writeString("       ");
+		//uart::writeInt(event.deltaTime);
+		//uart::writeString("       ");
 
-		uart::debugEvent(event);
-		uart::writeString("\n");
+		//uart::debugEvent(event);
+		//uart::writeString("\n");
 
 
 		if(event.type == END_OF_TRACK)
@@ -145,6 +158,7 @@ int main()
 		}
 	}
 
+	menu::print("bye");
 
 	while(1);
 	return 0;

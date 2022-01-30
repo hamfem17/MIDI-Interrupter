@@ -38,7 +38,7 @@ void init_spi()
 	DDRB |= (1 << PB1) | (1 << PB2);
 
 	// Set CS as output and set HIGH to set SD card in SPI mode
-	// If the CS pin isn't manually set as output, SPI won't do anything
+	// If the CS pin isn't manually set as output, SPI won't start
 	DDRB |= (1 << PB0);
 
 	// Enable SPI, set Master Mode, set prescaler to 128
@@ -55,11 +55,6 @@ uint8_t spi_transmit(uint8_t data)
 
 uint8_t send_command(uint8_t command, uint32_t argument)
 {
-	// Select the card
-	CS_HIGH();
-	spi_transmit(0xFF);
-	CS_LOW();
-	spi_transmit(0xFF);
 
 	// send the start bits and the command
 	spi_transmit(0b01000000 | command);
@@ -105,6 +100,12 @@ DSTATUS disk_initialize()
 
 	init_spi();
 
+	// Select the card
+	//CS_HIGH();
+	//spi_transmit(0xFF);
+	//CS_LOW();
+	//spi_transmit(0xFF);
+
 	for(uint8_t i = 0; i < 10; i++)
 	{
 		spi_transmit(0xFF); // 80 clock cycles with CS and MOSI high
@@ -113,8 +114,8 @@ DSTATUS disk_initialize()
 	r1 = send_command(CMD0, 0);
 	if(r1 != 1)
 	{
-		DDRB |= (1 << 7);
-		PORTB |= (1 << 7);
+		//DDRB |= (1 << 7);
+		//PORTB |= (1 << 7);
 		return STA_NOINIT;
 	}
 	r1 = send_command(CMD8, 0x1AA);
@@ -127,6 +128,11 @@ DSTATUS disk_initialize()
 		} while(r1 != 0);
 	} else { // SDv1 or MMCv3
 	}
+
+	//CS_LOW();
+	//spi_transmit(0xFF);
+	//CS_HIGH();
+	//spi_transmit(0xFF);
 
 
 	return 0;
@@ -153,10 +159,10 @@ DRESULT disk_readp (
 
 	if(count + offset > 512) return RES_ERROR;
 
-	CS_HIGH();
-	spi_transmit(0xFF);
-	CS_LOW();
-	spi_transmit(0xFF);
+	//CS_HIGH();
+	//spi_transmit(0xFF);
+	//CS_LOW();
+	//spi_transmit(0xFF);
 
 	r1 = send_command(CMD17, sector);
 
@@ -192,10 +198,10 @@ DRESULT disk_readp (
 
 	}
 
-	CS_LOW();
-	spi_transmit(0xFF);
-	CS_HIGH();
-	spi_transmit(0xFF);
+	//CS_LOW();
+	//spi_transmit(0xFF);
+	//CS_HIGH();
+	//spi_transmit(0xFF);
 
 	return res;
 }

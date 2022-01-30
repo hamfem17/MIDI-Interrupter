@@ -13,7 +13,7 @@ uint8_t menu::selectItem(char** items) {
     int8_t change;
     lcd_clrscr();             /* clear screen of lcd */
     lcd_home();               /* bring cursor to 0,0 */
-    lcd_puts(items[0]);        /* type something random */
+    lcd_puts(items[0]);
     lcd_gotoxy(0,1);
     char abc[4];
     abc[1] = '/';
@@ -36,4 +36,10 @@ uint8_t menu::selectItem(char** items) {
             return current;
         }
     }
+}
+
+void menu::print(char* str) {
+    lcd_clrscr();
+    lcd_home();
+    lcd_puts(str);
 }

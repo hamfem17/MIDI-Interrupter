@@ -16,10 +16,10 @@ ISR(INT5_vect) {
     EIFR |= (1 << INTF5); // clear pending interrupts
 }
 
-ISR(INT4_vect) {
+ISR(INT3_vect) {
     rotary::button_flag = 1;
     _delay_ms(50);
-    EIFR |= (1 << INTF4);
+    EIFR |= (1 << INTF3);
 }
 
 void rotary::init() {
@@ -33,10 +33,10 @@ void rotary::init() {
     EICRB |= (1 << ISC51); // Interrupt on falling edge
     rotary_flag = 0;
     // button
-    DDRE &= ~(1 << PE4);
-    PORTE |= (1 << PE4);
-    EIMSK |= (1 << INT4);
-    EICRB |= (1 << ISC40) | (1 << ISC41);
+    DDRD &= ~(1 << PD3);
+    PORTD |= (1 << PD3);
+    EIMSK |= (1 << INT3);
+    EICRA |= (1 << ISC30) | (1 << ISC31);
     button_flag = 0;
 }
 
