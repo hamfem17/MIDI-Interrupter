@@ -66,100 +66,111 @@ int main()
 	uart::writeString("\n");
 
 	char** files = (char**)malloc(numberOfFiles * sizeof(char*) + 1); // maybe add 2?
+	UINT* fileSize = (UINT*)malloc(numberOfFiles * sizeof(UINT) + 1); // maybe add 2?
 
 	for(size_t i = 0; i < numberOfFiles;) {
 		pf_readdir(&dp, &fno);
+
 		if(fno.fattrib & AM_DIR) continue;
 		files[i] = (char*)malloc(strlen(fno.fname)+1);
+		fileSize[i] = fno.fsize;
 		strcpy(files[i], fno.fname);
 		i++;
 	}
 
 	files[numberOfFiles] = nullptr;
 
-	for(size_t i = 0; files[i]; i++) {
-		uart::writeString(files[i]);
-		uart::writeString("\n");
-	}
-
-	uint8_t selection = menu::selectItem(files);
-
-	pf_open(files[selection]);
-
-	uint8_t outmid[7000];
-
-	unsigned int bytes_read;
-	bytes_read = 0; // otherwise pf_read won't work
-	res1 = pf_read(outmid, 7000, &bytes_read);
-	if(res1) {
-		uart::writeString("Could not read file\n");
-		uart::writeString("Error ");
-		uart::writeInt(res1);
-		menu::print("Read Error");
-		return 1;
-	} else {
-		uart::writeString("Read file\n");
-	}
-
-	/*for(int i = 0; i < 568; i++) {
-		uart::debugHex(outmid[i]);
-		uart::writeString("\n");
-	}*/
-
-
-	int freq;
-	int size = 0;
-	//uint8_t *midiFILE;
-	
-	MIDI decoder = MIDI(outmid);
-
-	if(decoder.readHeader())
+	uint8_t selection = 0;
+	while (1)
 	{
-		return 1;
-	};
 
-	uart::writeString("  DT | EVENT TYPE  | NOTE\n");
-	menu::print("Playing...");
-	while(1)
-	{
-		Event event = decoder.getNextEvent();
-
-		//uart::writeInt(event.deltaTime);
-		//uart::writeString("       ");
-
-		//uart::debugEvent(event);
-		//uart::writeString("\n");
-
-
-		if(event.type == END_OF_TRACK)
-		{
-			uart::writeString("done");
-			break;
+		for(size_t i = 0; files[i]; i++) {
+			uart::writeString(files[i]);
+			uart::writeString("\n");
 		}
 
-		switch(event.type)
+		selection = menu::selectItem(files,selection);
+
+		pf_open(files[selection]);
+
+		uint8_t* midiFILE = (uint8_t*)malloc(fileSize[selection]);
+		if (midiFILE == nullptr)
 		{
-			case NOTE_ON:
-				freq = 440 * pow(2, (double)(event.note - 69) / 12);
-				DeltaTimer::delay(event.deltaTime);
-				PWM::start(freq);
-				break;
-			case NOTE_OFF:
-			 	freq = 440 * pow(2, (double)(event.note - 69) / 12);
-				DeltaTimer::delay(event.deltaTime);
-				PWM::stop(freq);
-				break;
-			case SET_TEMPO:
-				DeltaTimer::setTempo(event.tempo / decoder.divison);
-				break;
-			case END_OF_TRACK:
-				break;
+			menu::print("Malloc Error");
+			return 1;
+		} 
 
+		unsigned int bytes_read;
+		bytes_read = 0; // otherwise pf_read won't work
+		res1 = pf_read(midiFILE, fileSize[selection], &bytes_read);
+		if(res1) {
+			uart::writeString("Could not read file\n");
+			uart::writeString("Error ");
+			uart::writeInt(res1);
+			menu::print("Read Error");
+			return 1;
+		} else {
+			uart::writeString("Read file\n");
 		}
+
+		/*for(int i = 0; i < 568; i++) {
+			uart::debugHex(midiFILE[i]);
+			uart::writeString("\n");
+		}*/
+
+
+		int freq;
+		int size = 0;
+		//uint8_t *midiFILE;
+		
+		MIDI decoder = MIDI(midiFILE);
+
+		if(decoder.readHeader())
+		{
+			return 1;
+		};
+
+		uart::writeString("  DT | EVENT TYPE  | NOTE\n");
+		menu::print("Playing...");
+		while(1)
+		{
+			Event event = decoder.getNextEvent();
+
+			//uart::writeInt(event.deltaTime);
+			//uart::writeString("       ");
+
+			//uart::debugEvent(event);
+			//uart::writeString("\n");
+
+
+			if(event.type == END_OF_TRACK)
+			{
+				uart::writeString("done");
+				break;
+			}
+
+			switch(event.type)
+			{
+				case NOTE_ON:
+					freq = 440 * pow(2, (double)(event.note - 69) / 12);
+					DeltaTimer::delay(event.deltaTime);
+					PWM::start(freq);
+					break;
+				case NOTE_OFF:
+					freq = 440 * pow(2, (double)(event.note - 69) / 12);
+					DeltaTimer::delay(event.deltaTime);
+					PWM::stop(freq);
+					break;
+				case SET_TEMPO:
+					DeltaTimer::setTempo(event.tempo / decoder.divison);
+					break;
+				case END_OF_TRACK:
+					break;
+
+			}
+			free(midiFILE);
+		}
+
 	}
-
-	menu::print("bye");
-
-	while(1);
 	return 0;
 }
