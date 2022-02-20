@@ -83,26 +83,19 @@ int main()
 	uint8_t selection = 0;
 	while (1)
 	{
-
-		for(size_t i = 0; files[i]; i++) {
-			uart::writeString(files[i]);
-			uart::writeString("\n");
-		}
-
-		selection = menu::selectItem(files,selection);
+		selection = menu::selectItem(files, selection);
 
 		pf_open(files[selection]);
 
-		uint8_t* midiFILE = (uint8_t*)malloc(fileSize[selection]);
-		if (midiFILE == nullptr)
+		uint8_t* midiFile = (uint8_t*)malloc(fileSize[selection]);
+		if (midiFile == nullptr)
 		{
 			menu::print("Malloc Error");
 			return 1;
-		} 
+		}
 
-		unsigned int bytes_read;
-		bytes_read = 0; // otherwise pf_read won't work
-		res1 = pf_read(midiFILE, fileSize[selection], &bytes_read);
+		UINT bytes_read = 0; // otherwise pf_read won't work
+		res1 = pf_read(midiFile, fileSize[selection], &bytes_read);
 		if(res1) {
 			uart::writeString("Could not read file\n");
 			uart::writeString("Error ");
@@ -113,35 +106,20 @@ int main()
 			uart::writeString("Read file\n");
 		}
 
-		/*for(int i = 0; i < 568; i++) {
-			uart::debugHex(midiFILE[i]);
-			uart::writeString("\n");
-		}*/
-
-
 		int freq;
 		int size = 0;
-		//uint8_t *midiFILE;
 		
-		MIDI decoder = MIDI(midiFILE);
+		MIDI decoder = MIDI(midiFile);
 
 		if(decoder.readHeader())
 		{
 			return 1;
-		};
+		}
 
-		uart::writeString("  DT | EVENT TYPE  | NOTE\n");
 		menu::print("Playing...");
 		while(1)
 		{
 			Event event = decoder.getNextEvent();
-
-			//uart::writeInt(event.deltaTime);
-			//uart::writeString("       ");
-
-			//uart::debugEvent(event);
-			//uart::writeString("\n");
-
 
 			if(event.type == END_OF_TRACK)
 			{
@@ -168,9 +146,8 @@ int main()
 					break;
 
 			}
-			free(midiFILE);
 		}
-
+		free(midiFile);
 	}
 	return 0;
 }

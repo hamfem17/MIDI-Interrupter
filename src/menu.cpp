@@ -25,8 +25,14 @@ uint8_t menu::selectItem(char** items, uint8_t lastPlayed) {
 
     while(1) {
         change = rotary::getChange();
-        if(change && current + change >= 0 && current + change < numberOfItems) {
-            current += change;
+        if(change) {
+            if(current + change > numberOfItems) {
+                current = 0;
+            } else if(current + change < 0) {
+                current = numberOfItems - 1;
+            } else {
+                current += change;
+            }
             lcd_clrscr();
             lcd_home();
             lcd_puts(items[current]);
