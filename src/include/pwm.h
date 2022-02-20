@@ -28,8 +28,8 @@
 #define TCNT4_addr 0xA4
 #define TCNT5_addr 0x124
 
-#define DDRB_addr 0x04
-#define DDRE_addr 0x0D
+#define DDRB_addr 0x24
+#define DDRE_addr 0x2D
 #define DDRH_addr 0x101
 #define DDRL_addr 0x10A
 
@@ -66,6 +66,7 @@ class PWMTimer
 	bool isFree;
 	uint16_t freq;
 
+	PWMTimer();
 	PWMTimer(uint16_t _ocnb_port_addr,
 			 uint16_t _ocnb_pin_addr,
 			 uint16_t _top_addr,
@@ -81,15 +82,9 @@ namespace PWM
 {
 	namespace
     {
-		PWMTimer t1 = PWMTimer(OCNB_PORT1, OC1B, OCR1A_addr, OCR1B_addr, TCCR1A_addr, TCCR1B_addr, TCNT1_addr);
-		PWMTimer t3 = PWMTimer(OCNB_PORT3, OC3B, OCR3A_addr, OCR3B_addr, TCCR3A_addr, TCCR3B_addr, TCNT3_addr);
-		PWMTimer t4 = PWMTimer(OCNB_PORT4, OC4B, OCR4A_addr, OCR4B_addr, TCCR4A_addr, TCCR4B_addr, TCNT4_addr);
-		PWMTimer t5 = PWMTimer(OCNB_PORT5, OC5B, OCR5A_addr, OCR5B_addr, TCCR5A_addr, TCCR5B_addr, TCNT5_addr);
+		PWMTimer timers[4];
 	}
-
+	void init();
 	void start(uint16_t freq, uint8_t dc = 20);
-
 	void stop(uint16_t freq);
-
-    void init();
 }

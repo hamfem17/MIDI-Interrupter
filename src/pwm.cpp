@@ -1,5 +1,7 @@
 #include "include/pwm.h"
 
+PWMTimer::PWMTimer(){}
+
 PWMTimer::PWMTimer(uint16_t  _ocnb_port_addr,
 				   uint16_t  _ocnb_pin_addr,
 				   uint16_t _top_addr,
@@ -7,7 +9,6 @@ PWMTimer::PWMTimer(uint16_t  _ocnb_port_addr,
 				   uint16_t _TCCRnA_addr,
 				   uint16_t _TCCRnB_addr, 
 				   uint16_t _TCNTn_addr) {
-
     top_addr = _top_addr;
     com_addr = _com_addr;
     TCCRnB_addr = _TCCRnB_addr;
@@ -37,54 +38,34 @@ void PWMTimer::start(uint16_t f, uint8_t dc) {
 }
 
 void PWMTimer::stop() {
-    while(_SFR_MEM16(TCNTn_addr) < (top * (double)duty_cycle / 100.0));
+    // wait until 
+    while(_SFR_MEM16(TCNTn_addr) > (top * (double)duty_cycle / 100.0));
     _SFR_MEM8(TCCRnB_addr) &= ~(1 << CSn1);
     freq = 0;
     isFree = true;
 }
 
 void PWM::start(uint16_t freq, uint8_t dc) {
-    if(t1.isFree) {
-        t1.start(freq, dc);
-    } else if(t3.isFree) {
-        t3.start(freq, dc);
-    } else if(t4.isFree) {
-        t4.start(freq, dc);
-    } else if(t5.isFree) {
-        t5.start(freq, dc);
+    for(PWMTimer & timer : timers) {
+        if(timer.isFree) {
+            timer.start(freq, dc);
+            break;
+        }
     }
 }
 
 void PWM::stop(uint16_t freq) {
-    if(t1.freq == freq) {
-        t1.stop();
-    } else if(t3.freq == freq) {
-        t3.stop();
-    } else if(t4.freq == freq) {
-        t4.stop();
-    } else if(t5.freq == freq) {
-        t5.stop();
+    for(PWMTimer & timer : timers) {
+        if(timer.freq == freq) {
+            timer.stop();
+            break;
+        }
     }
 }
 
 void PWM::init() {
-
-	// Set all PWM pins as output
-	DDRB |= (1 << OC1B);
-	DDRE |= (1 << OC3B);
-	DDRH |= (1 << OC4B);
-	DDRL |= (1 << OC5B);
-
-	// COMnB1       ... Clear OCnB on Compare Match while upcounting, clear while downcounting
-	// WGMn1, WGMn3 ... Phase and Frequency correct PWM Mode with OCRnA as TOP
-
-	TCCR1A |= (1 << COM1B1) | (1 << WGM10);
-	TCCR3A |= (1 << COM3B1) | (1 << WGM30);
-	TCCR4A |= (1 << COM4B1) | (1 << WGM40);
-	TCCR5A |= (1 << COM5B1) | (1 << WGM50);
-
-	TCCR1B |= (1 << WGM13);
-	TCCR3B |= (1 << WGM33);
-	TCCR4B |= (1 << WGM43);
-	TCCR5B |= (1 << WGM53);
+    timers[0] = PWMTimer(OCNB_PORT1, OC1B, OCR1A_addr, OCR1B_addr, TCCR1A_addr, TCCR1B_addr, TCNT1_addr);
+	timers[1] = PWMTimer(OCNB_PORT3, OC3B, OCR3A_addr, OCR3B_addr, TCCR3A_addr, TCCR3B_addr, TCNT3_addr);
+	timers[2] = PWMTimer(OCNB_PORT4, OC4B, OCR4A_addr, OCR4B_addr, TCCR4A_addr, TCCR4B_addr, TCNT4_addr);
+	timers[3] = PWMTimer(OCNB_PORT5, OC5B, OCR5A_addr, OCR5B_addr, TCCR5A_addr, TCCR5B_addr, TCNT5_addr);
 }
