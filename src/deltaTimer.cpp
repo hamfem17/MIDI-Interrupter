@@ -24,9 +24,6 @@ void DeltaTimer::delay(uint32_t deltatime)
     DeltaTimer::overflow_total = delayTime / 4096;
 
     overflow_count = 0;
-
-    uart::writeInt(overflow_total);
-    uart::writeString("\n");
     
     while(overflow_count != overflow_total);
 }
