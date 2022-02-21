@@ -58,7 +58,6 @@ Event MIDI::getNextEvent()
         }
     }
 
-
     uint8_t byte = nextByte();
 
     if((byte & 0xF0) == 0x80)
@@ -84,6 +83,9 @@ Event MIDI::getNextEvent()
             event.tempo = ((uint32_t)nextWord() << 8) | (nextByte());
             event.type = SET_TEMPO;
         }
+    }else if ((byte & 0x80) == 0)
+    {
+        event.type == previousEvent.type
     }
 
 
@@ -93,6 +95,7 @@ Event MIDI::getNextEvent()
         nextByte();
     }
 
+    previousEvent = event;
     return event;
 }
 
