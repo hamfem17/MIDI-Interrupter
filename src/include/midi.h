@@ -24,7 +24,7 @@ class MIDI
 {
     uint8_t* music;
     uint32_t pos = 0; 
-    
+    Event previousEvent;
 
     uint8_t nextByte();
     uint16_t nextWord();
