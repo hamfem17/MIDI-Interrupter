@@ -9,7 +9,7 @@ enum EventType
     NOTE_OFF,
     SET_TEMPO,
     END_OF_TRACK
-};
+};  
 
 struct Event
 {
@@ -24,7 +24,7 @@ class MIDI
 {
     uint8_t* music;
     uint32_t pos = 0; 
-    Event previousEvent;
+    EventType previousEventType;
 
     uint8_t nextByte();
     uint16_t nextWord();

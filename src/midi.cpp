@@ -57,10 +57,15 @@ Event MIDI::getNextEvent()
              break;
         }
     }
-
+    uart::writeString("\nnext event");
     uint8_t byte = nextByte();
 
-    if((byte & 0xF0) == 0x80)
+    if (byte < 0x80) // running status
+    {
+        event.type = previousEventType;
+        pos--;
+    }
+    else if((byte & 0xF0) == 0x80)
     {
         event.type = NOTE_OFF;
     } 
@@ -83,19 +88,20 @@ Event MIDI::getNextEvent()
             event.tempo = ((uint32_t)nextWord() << 8) | (nextByte());
             event.type = SET_TEMPO;
         }
-    }else if ((byte & 0x80) == 0)
-    {
-        event.type == previousEvent.type
     }
 
 
     if(event.type == NOTE_ON || event.type == NOTE_OFF)
     {
         event.note =  nextByte();
-        nextByte();
+        event.velocity = nextByte();
     }
+    
+    previousEventType = event.type;
 
-    previousEvent = event;
+    if(event.type == NOTE_ON && event.velocity == 0) {
+        event.type = NOTE_OFF;
+    }
     return event;
 }
 

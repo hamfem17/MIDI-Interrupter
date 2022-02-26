@@ -21,7 +21,7 @@ PWMTimer::PWMTimer(uint16_t  _ocnb_port_addr,
     _SFR_MEM16(_TCCRnA_addr) |= (1 << WGMn0);
     _SFR_MEM16(_TCCRnB_addr) |= (1 << WGMn3);
     
-    // Set OCnx on Compare Match when upcounting, clear when downcounting
+    // Clear OCnB on Compare Match when upcounting, set when downcounting
     _SFR_MEM16(_TCCRnA_addr) |= (1 << COMnB1);
 
     isFree = true;
@@ -38,8 +38,8 @@ void PWMTimer::start(uint16_t f, uint8_t dc) {
 }
 
 void PWMTimer::stop() {
-    // wait until 
-    while(_SFR_MEM16(TCNTn_addr) > (top * (double)duty_cycle / 100.0));
+    // Wait until OCnB is low, before turning off the timer
+    while(_SFR_MEM16(TCNTn_addr) < (top * (double)duty_cycle / 100.0));
     _SFR_MEM8(TCCRnB_addr) &= ~(1 << CSn1);
     freq = 0;
     isFree = true;
